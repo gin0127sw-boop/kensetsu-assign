@@ -1,0 +1,1743 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>現場クエスト — 工事アサインシステム</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&family=Oswald:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #0f1117;
+  --bg2: #181c27;
+  --bg3: #1e2330;
+  --bg4: #252a3a;
+  --border: rgba(255,255,255,0.07);
+  --border2: rgba(255,255,255,0.14);
+  --text: #e8eaf0;
+  --text2: #8b90a8;
+  --text3: #555c78;
+  --accent: #f5a623;
+  --accent2: #e8832a;
+  --blue: #4a9eff;
+  --green: #3dd68c;
+  --red: #ff5555;
+  --purple: #9b59ff;
+  --rarity1: #8b90a8;
+  --rarity2: #3dd68c;
+  --rarity3: #4a9eff;
+  --rarity4: #c77dff;
+  --rarity5: #f5a623;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font-family: 'Noto Sans JP', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+/* ── HEADER ── */
+header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 0 24px;
+  height: 56px;
+  background: var(--bg2);
+  border-bottom: 1px solid var(--border);
+  position: sticky; top: 0; z-index: 100;
+}
+.logo {
+  font-family: 'Oswald', sans-serif;
+  font-size: 20px; font-weight: 600;
+  color: var(--accent);
+  letter-spacing: 0.06em;
+}
+.logo span { color: var(--text2); font-weight: 400; font-size: 13px; margin-left: 8px; font-family: 'Noto Sans JP', sans-serif; }
+.nav-tabs { display: flex; gap: 2px; }
+.nav-tab {
+  padding: 6px 16px; border-radius: 6px;
+  font-size: 13px; cursor: pointer; color: var(--text2);
+  transition: all 0.15s;
+  border: none; background: none;
+}
+.nav-tab:hover { background: var(--bg4); color: var(--text); }
+.nav-tab.active { background: var(--bg4); color: var(--accent); font-weight: 500; }
+.header-stats { display: flex; gap: 16px; align-items: center; }
+.hstat { font-size: 12px; color: var(--text2); }
+.hstat strong { color: var(--text); font-weight: 500; }
+
+/* ── LAYOUT ── */
+.app { display: flex; height: calc(100vh - 56px); }
+.panel { overflow-y: auto; }
+.panel::-webkit-scrollbar { width: 4px; }
+.panel::-webkit-scrollbar-track { background: transparent; }
+.panel::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 2px; }
+
+/* ── LEFT: QUEST LIST ── */
+.quest-panel {
+  width: 340px; flex-shrink: 0;
+  background: var(--bg2);
+  border-right: 1px solid var(--border);
+  display: flex; flex-direction: column;
+}
+.panel-header {
+  padding: 14px 16px 10px;
+  border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: space-between;
+}
+.panel-title { font-size: 11px; font-weight: 500; color: var(--text2); letter-spacing: 0.08em; text-transform: uppercase; }
+.add-btn {
+  font-size: 11px; padding: 4px 10px;
+  background: var(--accent); color: #1a0e00;
+  border: none; border-radius: 4px; cursor: pointer;
+  font-weight: 700; font-family: 'Noto Sans JP', sans-serif;
+  transition: opacity 0.15s;
+}
+.add-btn:hover { opacity: 0.85; }
+.quest-list { flex: 1; overflow-y: auto; padding: 8px; }
+.quest-card {
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  border-radius: 8px; padding: 12px 14px;
+  margin-bottom: 6px; cursor: pointer;
+  transition: all 0.15s; position: relative;
+  overflow: hidden;
+}
+.quest-card::before {
+  content: '';
+  position: absolute; left: 0; top: 0; bottom: 0; width: 3px;
+}
+.quest-card.diff-1::before { background: var(--rarity1); }
+.quest-card.diff-2::before { background: var(--rarity2); }
+.quest-card.diff-3::before { background: var(--blue); }
+.quest-card.diff-4::before { background: var(--purple); }
+.quest-card.diff-5::before { background: var(--rarity5); }
+.quest-card:hover { border-color: var(--border2); background: var(--bg4); }
+.quest-card.selected { border-color: var(--accent); background: rgba(245,166,35,0.06); }
+.quest-card.has-conflict { border-color: var(--red) !important; }
+.quest-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 8px; margin-bottom: 6px; }
+.quest-name { font-size: 13px; font-weight: 500; color: var(--text); line-height: 1.4; }
+.diff-badge {
+  font-family: 'Oswald', sans-serif;
+  font-size: 11px; font-weight: 600;
+  padding: 2px 7px; border-radius: 3px; flex-shrink: 0;
+}
+.diff-1 .diff-badge { background: rgba(139,144,168,0.2); color: var(--rarity1); }
+.diff-2 .diff-badge { background: rgba(61,214,140,0.15); color: var(--rarity2); }
+.diff-3 .diff-badge { background: rgba(74,158,255,0.15); color: var(--blue); }
+.diff-4 .diff-badge { background: rgba(155,89,255,0.15); color: var(--purple); }
+.diff-5 .diff-badge { background: rgba(245,166,35,0.15); color: var(--rarity5); }
+.quest-meta { font-size: 11px; color: var(--text2); display: flex; gap: 10px; margin-bottom: 6px; }
+.quest-amount { font-size: 12px; color: var(--accent); font-weight: 500; }
+.quest-slots { display: flex; gap: 4px; align-items: center; }
+.slot-pip {
+  width: 22px; height: 22px; border-radius: 50%;
+  border: 1.5px dashed var(--border2);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 9px; color: var(--text3);
+  transition: all 0.2s;
+}
+.slot-pip.filled {
+  border-style: solid; border-color: transparent;
+  font-size: 11px;
+}
+.conflict-tag {
+  font-size: 10px; color: var(--red);
+  background: rgba(255,85,85,0.1);
+  padding: 2px 6px; border-radius: 3px;
+  margin-top: 4px; display: inline-flex; align-items: center; gap: 3px;
+}
+
+/* ── CENTER: ASSIGN BOARD ── */
+.assign-panel { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+.assign-header {
+  padding: 16px 20px 12px;
+  border-bottom: 1px solid var(--border);
+  background: var(--bg);
+}
+.quest-detail-title { font-family: 'Oswald', sans-serif; font-size: 22px; font-weight: 600; margin-bottom: 4px; }
+.quest-detail-meta { font-size: 12px; color: var(--text2); display: flex; gap: 16px; align-items: center; flex-wrap: wrap; }
+.meta-chip {
+  display: inline-flex; align-items: center; gap: 4px;
+  background: var(--bg3); border: 1px solid var(--border);
+  padding: 3px 10px; border-radius: 20px; font-size: 11px;
+}
+.meta-chip.warning { border-color: var(--red); color: var(--red); background: rgba(255,85,85,0.08); }
+.assign-actions { display: flex; gap: 8px; margin-top: 10px; }
+.action-btn {
+  font-size: 12px; padding: 6px 14px;
+  border-radius: 5px; cursor: pointer;
+  font-family: 'Noto Sans JP', sans-serif;
+  font-weight: 500; border: 1px solid var(--border2);
+  background: var(--bg3); color: var(--text);
+  transition: all 0.15s;
+}
+.action-btn:hover { background: var(--bg4); }
+.action-btn.primary { background: var(--accent); color: #1a0e00; border-color: var(--accent); font-weight: 700; }
+.action-btn.primary:hover { opacity: 0.85; }
+
+/* ── UNIT SLOTS IN ASSIGN ── */
+.assign-body { flex: 1; overflow-y: auto; padding: 16px 20px; }
+.section-label { font-size: 11px; color: var(--text2); letter-spacing: 0.06em; text-transform: uppercase; margin-bottom: 10px; font-weight: 500; }
+.unit-slots-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 10px; margin-bottom: 20px; }
+.unit-slot-card {
+  background: var(--bg3); border: 1.5px dashed var(--border2);
+  border-radius: 10px; padding: 12px; text-align: center;
+  min-height: 120px; display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  cursor: pointer; transition: all 0.2s; position: relative;
+}
+.unit-slot-card.empty:hover { border-color: var(--accent); background: rgba(245,166,35,0.04); }
+.unit-slot-card.filled { border-style: solid; border-color: var(--border2); background: var(--bg4); }
+.unit-slot-card.filled:hover { border-color: var(--red); }
+.unit-slot-card.conflict-unit { border-color: var(--red) !important; background: rgba(255,85,85,0.06); animation: pulse-red 2s infinite; }
+@keyframes pulse-red { 0%,100% { box-shadow: 0 0 0 0 rgba(255,85,85,0); } 50% { box-shadow: 0 0 0 4px rgba(255,85,85,0.15); } }
+.slot-avatar {
+  width: 48px; height: 48px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 20px; margin-bottom: 6px;
+  border: 2px solid var(--border);
+}
+.slot-unit-name { font-size: 12px; font-weight: 500; color: var(--text); margin-bottom: 2px; }
+.slot-unit-role { font-size: 10px; color: var(--text2); margin-bottom: 4px; }
+.slot-rarity-stars { font-size: 9px; letter-spacing: 1px; }
+.slot-conflict-icon { position: absolute; top: 6px; right: 6px; font-size: 14px; }
+.slot-bonus { font-size: 10px; color: var(--green); background: rgba(61,214,140,0.1); padding: 2px 6px; border-radius: 10px; margin-top: 3px; }
+.empty-plus { font-size: 24px; color: var(--text3); }
+.empty-label { font-size: 11px; color: var(--text3); margin-top: 4px; }
+
+/* ── SKILL REQUIREMENTS ── */
+.req-grid { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 20px; }
+.req-chip {
+  display: flex; align-items: center; gap: 6px;
+  background: var(--bg3); border: 1px solid var(--border);
+  padding: 5px 10px; border-radius: 6px; font-size: 11px;
+}
+.req-chip.met { border-color: rgba(61,214,140,0.3); color: var(--green); }
+.req-chip.unmet { border-color: rgba(255,85,85,0.3); color: var(--red); }
+.req-chip.optional { color: var(--text2); }
+.req-dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
+
+/* ── RIGHT: UNIT ROSTER ── */
+.roster-panel {
+  width: 280px; flex-shrink: 0;
+  background: var(--bg2);
+  border-left: 1px solid var(--border);
+  display: flex; flex-direction: column;
+}
+.roster-search {
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--border);
+}
+.search-input {
+  width: 100%; background: var(--bg3);
+  border: 1px solid var(--border);
+  border-radius: 6px; padding: 7px 10px;
+  font-size: 12px; color: var(--text);
+  font-family: 'Noto Sans JP', sans-serif;
+  outline: none; transition: border 0.15s;
+}
+.search-input:focus { border-color: var(--accent); }
+.search-input::placeholder { color: var(--text3); }
+.roster-list { flex: 1; overflow-y: auto; padding: 8px; }
+.unit-card {
+  background: var(--bg3); border: 1px solid var(--border);
+  border-radius: 8px; padding: 10px;
+  margin-bottom: 6px; cursor: grab;
+  transition: all 0.15s; display: flex; gap: 10px; align-items: center;
+  position: relative;
+}
+.unit-card:hover { border-color: var(--border2); background: var(--bg4); }
+.unit-card.available { cursor: pointer; }
+.unit-card.unavailable { opacity: 0.45; cursor: not-allowed; }
+.unit-card.already-assigned { border-color: rgba(74,158,255,0.3); }
+.unit-avatar {
+  width: 40px; height: 40px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 16px; flex-shrink: 0;
+  border: 2px solid var(--border);
+}
+.r1 { background: rgba(139,144,168,0.15); border-color: var(--rarity1); }
+.r2 { background: rgba(61,214,140,0.15); border-color: var(--rarity2); }
+.r3 { background: rgba(74,158,255,0.15); border-color: var(--blue); }
+.r4 { background: rgba(155,89,255,0.15); border-color: var(--purple); }
+.r5 { background: rgba(245,166,35,0.15); border-color: var(--rarity5); }
+.unit-info { flex: 1; min-width: 0; }
+.unit-name { font-size: 12px; font-weight: 500; color: var(--text); }
+.unit-skills { font-size: 10px; color: var(--text2); margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.unit-rarity { font-size: 9px; letter-spacing: 1px; }
+.assign-icon {
+  font-size: 16px; flex-shrink: 0;
+  opacity: 0; transition: opacity 0.15s;
+}
+.unit-card:hover .assign-icon { opacity: 1; }
+.unit-status-dot {
+  position: absolute; top: 6px; right: 6px;
+  width: 7px; height: 7px; border-radius: 50%;
+}
+.dot-free { background: var(--green); }
+.dot-busy { background: var(--red); }
+.dot-partial { background: var(--accent); }
+
+/* ── MODALS ── */
+.modal-overlay {
+  position: fixed; inset: 0;
+  background: rgba(0,0,0,0.7); backdrop-filter: blur(4px);
+  z-index: 200; display: flex; align-items: center; justify-content: center;
+  animation: fadeIn 0.15s ease;
+}
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+.modal {
+  background: var(--bg2); border: 1px solid var(--border2);
+  border-radius: 12px; padding: 24px; width: 420px; max-width: 95vw;
+  animation: slideUp 0.2s ease;
+}
+@keyframes slideUp { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+.modal-title { font-family: 'Oswald', sans-serif; font-size: 18px; font-weight: 600; margin-bottom: 16px; }
+.form-row { margin-bottom: 12px; }
+.form-label { font-size: 11px; color: var(--text2); margin-bottom: 4px; display: block; }
+.form-input, .form-select {
+  width: 100%; background: var(--bg3);
+  border: 1px solid var(--border);
+  border-radius: 6px; padding: 8px 10px;
+  font-size: 13px; color: var(--text);
+  font-family: 'Noto Sans JP', sans-serif;
+  outline: none; transition: border 0.15s;
+}
+.form-input:focus, .form-select:focus { border-color: var(--accent); }
+.form-row-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.modal-actions { display: flex; gap: 8px; justify-content: flex-end; margin-top: 20px; }
+.modal-cancel {
+  padding: 8px 16px; border-radius: 6px;
+  background: var(--bg3); border: 1px solid var(--border2);
+  color: var(--text2); cursor: pointer;
+  font-family: 'Noto Sans JP', sans-serif; font-size: 13px;
+}
+.modal-submit {
+  padding: 8px 20px; border-radius: 6px;
+  background: var(--accent); border: none;
+  color: #1a0e00; cursor: pointer; font-weight: 700;
+  font-family: 'Noto Sans JP', sans-serif; font-size: 13px;
+}
+.modal-submit:hover { opacity: 0.85; }
+
+/* ── TOAST ── */
+.toast {
+  position: fixed; bottom: 24px; right: 24px;
+  background: var(--bg4); border: 1px solid var(--border2);
+  border-radius: 8px; padding: 12px 16px;
+  font-size: 13px; z-index: 300;
+  animation: slideIn 0.2s ease;
+  max-width: 280px;
+}
+@keyframes slideIn { from { transform: translateX(30px); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+.toast.success { border-color: var(--green); color: var(--green); }
+.toast.error { border-color: var(--red); color: var(--red); }
+.toast.info { border-color: var(--blue); color: var(--blue); }
+
+/* ── EMPTY STATE ── */
+.empty-state {
+  flex: 1; display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  color: var(--text3); text-align: center; padding: 40px;
+}
+.empty-state-icon { font-size: 48px; margin-bottom: 12px; opacity: 0.4; }
+.empty-state-text { font-size: 14px; color: var(--text2); }
+.empty-state-sub { font-size: 12px; margin-top: 6px; }
+
+/* ── AFFINITY PREVIEW ── */
+.affinity-preview {
+  background: var(--bg3); border: 1px solid var(--border);
+  border-radius: 8px; padding: 12px; margin-bottom: 16px;
+}
+.affinity-row { display: flex; align-items: center; gap: 8px; padding: 4px 0; font-size: 12px; }
+.aff-plus { color: var(--green); }
+.aff-minus { color: var(--red); }
+
+/* ── CALENDAR VIEW ── */
+#calendar-view {
+  display: none;
+  flex-direction: column;
+  width: 100%;
+  height: calc(100vh - 56px);
+  overflow: hidden;
+  background: var(--bg);
+}
+.cal-toolbar {
+  display: flex; align-items: center; gap: 12px;
+  padding: 12px 20px;
+  background: var(--bg2);
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+}
+.cal-nav-btn {
+  background: var(--bg3); border: 1px solid var(--border2);
+  color: var(--text); border-radius: 6px;
+  padding: 5px 12px; font-size: 13px; cursor: pointer;
+  font-family: 'Noto Sans JP', sans-serif;
+  transition: background 0.15s;
+}
+.cal-nav-btn:hover { background: var(--bg4); }
+.cal-month-label {
+  font-family: 'Oswald', sans-serif;
+  font-size: 18px; font-weight: 600; color: var(--text);
+  min-width: 180px;
+}
+.cal-filter-row { display: flex; gap: 8px; margin-left: auto; align-items: center; }
+.cal-filter-chip {
+  font-size: 11px; padding: 4px 10px;
+  border-radius: 20px; cursor: pointer;
+  border: 1px solid var(--border2);
+  background: var(--bg3); color: var(--text2);
+  transition: all 0.15s;
+}
+.cal-filter-chip.active { background: var(--accent); color: #1a0e00; border-color: var(--accent); font-weight: 700; }
+.cal-legend { display: flex; gap: 12px; align-items: center; }
+.legend-item { display: flex; align-items: center; gap: 5px; font-size: 11px; color: var(--text2); }
+.legend-dot { width: 10px; height: 10px; border-radius: 2px; }
+
+/* Gantt layout */
+.gantt-wrapper {
+  flex: 1; overflow: auto; position: relative;
+}
+.gantt-wrapper::-webkit-scrollbar { width: 6px; height: 6px; }
+.gantt-wrapper::-webkit-scrollbar-track { background: var(--bg2); }
+.gantt-wrapper::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 3px; }
+
+.gantt-grid {
+  display: grid;
+  min-width: max-content;
+}
+/* Header row: name col + day cols */
+.gantt-header {
+  display: flex;
+  position: sticky; top: 0; z-index: 20;
+  background: var(--bg2);
+  border-bottom: 1px solid var(--border);
+}
+.gantt-name-col {
+  width: 180px; flex-shrink: 0;
+  font-size: 11px; color: var(--text3);
+  padding: 8px 12px;
+  border-right: 1px solid var(--border);
+  position: sticky; left: 0; background: var(--bg2); z-index: 25;
+  display: flex; align-items: center;
+}
+.gantt-day-headers { display: flex; }
+.gantt-day-cell {
+  flex-shrink: 0;
+  font-size: 10px; color: var(--text3);
+  text-align: center;
+  padding: 4px 0 3px;
+  border-right: 1px solid var(--border);
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  user-select: none;
+}
+.gantt-day-cell.weekend { background: rgba(255,255,255,0.02); }
+.gantt-day-cell.today { background: rgba(245,166,35,0.08); }
+.gantt-day-cell .day-num { font-weight: 500; font-size: 11px; color: var(--text2); }
+.gantt-day-cell.today .day-num { color: var(--accent); }
+.gantt-day-cell .day-name { font-size: 9px; }
+.gantt-day-cell.weekend .day-name { color: rgba(255,85,85,0.6); }
+
+/* Month dividers in header */
+.gantt-month-header {
+  position: sticky; top: 0;
+  background: var(--bg2);
+  border-bottom: 1px solid var(--border2);
+  display: flex;
+}
+.gantt-month-label-cell {
+  flex-shrink: 0;
+  font-size: 11px; font-weight: 500; color: var(--text2);
+  padding: 5px 8px;
+  border-right: 1px solid var(--border2);
+}
+
+/* Row: unit or quest */
+.gantt-section-header {
+  display: flex;
+  background: var(--bg3);
+  border-bottom: 1px solid var(--border);
+  position: sticky; left: 0;
+}
+.gantt-section-label {
+  font-size: 10px; font-weight: 500; letter-spacing: 0.07em;
+  color: var(--text3); text-transform: uppercase;
+  padding: 6px 12px;
+  width: 180px; flex-shrink: 0;
+  border-right: 1px solid var(--border);
+  position: sticky; left: 0; background: var(--bg3); z-index: 15;
+}
+
+.gantt-row {
+  display: flex;
+  border-bottom: 1px solid var(--border);
+  min-height: 40px;
+  position: relative;
+  transition: background 0.1s;
+}
+.gantt-row:hover { background: rgba(255,255,255,0.015); }
+.gantt-row.conflict-row { background: rgba(255,85,85,0.04); }
+
+.gantt-row-name {
+  width: 180px; flex-shrink: 0;
+  padding: 0 12px;
+  display: flex; align-items: center; gap: 8px;
+  border-right: 1px solid var(--border);
+  position: sticky; left: 0;
+  background: var(--bg); z-index: 10;
+  transition: background 0.1s;
+}
+.gantt-row:hover .gantt-row-name { background: var(--bg3); }
+.gantt-row.conflict-row .gantt-row-name { background: rgba(255,85,85,0.04); }
+.row-avatar {
+  width: 24px; height: 24px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 11px; flex-shrink: 0;
+  border: 1.5px solid var(--border);
+}
+.row-name-text { font-size: 12px; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 120px; }
+.row-conflict-icon { font-size: 11px; margin-left: auto; flex-shrink: 0; }
+
+/* Timeline cells */
+.gantt-timeline { display: flex; position: relative; flex: 1; }
+.gantt-cell {
+  flex-shrink: 0;
+  border-right: 1px solid var(--border);
+  position: relative;
+}
+.gantt-cell.weekend { background: rgba(255,255,255,0.015); }
+.gantt-cell.today-col { background: rgba(245,166,35,0.05); }
+
+/* Quest bars */
+.quest-bar {
+  position: absolute;
+  top: 6px; height: 28px;
+  border-radius: 5px;
+  display: flex; align-items: center;
+  padding: 0 8px;
+  font-size: 10px; font-weight: 500;
+  white-space: nowrap; overflow: hidden;
+  cursor: pointer;
+  transition: filter 0.15s, transform 0.1s;
+  z-index: 5;
+  box-sizing: border-box;
+}
+.quest-bar:hover { filter: brightness(1.2); transform: scaleY(1.05); }
+.quest-bar.conflict-bar {
+  animation: bar-pulse 2s infinite;
+  outline: 2px solid var(--red);
+  outline-offset: 1px;
+}
+@keyframes bar-pulse {
+  0%,100% { box-shadow: 0 0 0 0 rgba(255,85,85,0); }
+  50% { box-shadow: 0 0 8px 2px rgba(255,85,85,0.3); }
+}
+.quest-bar-name { overflow: hidden; text-overflow: ellipsis; }
+
+/* Today line */
+.today-line {
+  position: absolute; top: 0; bottom: 0;
+  width: 2px; background: var(--accent);
+  z-index: 8; pointer-events: none;
+  box-shadow: 0 0 6px rgba(245,166,35,0.5);
+}
+.today-line::before {
+  content: 'TODAY';
+  position: absolute; top: 4px;
+  left: 4px;
+  font-size: 9px; font-weight: 700;
+  color: var(--accent);
+  letter-spacing: 0.05em;
+}
+
+/* Tooltip */
+.cal-tooltip {
+  position: fixed;
+  background: var(--bg4);
+  border: 1px solid var(--border2);
+  border-radius: 8px;
+  padding: 10px 14px;
+  font-size: 12px;
+  z-index: 200;
+  pointer-events: none;
+  min-width: 200px;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+}
+.tt-title { font-size: 13px; font-weight: 500; color: var(--text); margin-bottom: 6px; }
+.tt-row { display: flex; justify-content: space-between; gap: 16px; color: var(--text2); margin-bottom: 3px; }
+.tt-val { color: var(--text); font-weight: 500; }
+
+/* Summary bar at bottom */
+.cal-summary {
+  padding: 8px 20px;
+  background: var(--bg2);
+  border-top: 1px solid var(--border);
+  display: flex; gap: 20px; align-items: center;
+  flex-shrink: 0;
+  font-size: 12px; color: var(--text2);
+}
+.cal-summary strong { color: var(--text); }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">現場クエスト <span>Construction Assign System</span></div>
+  <div class="nav-tabs">
+    <button class="nav-tab active" id="nav-assign" onclick="switchView('assign')">アサイン</button>
+    <button class="nav-tab" id="nav-calendar" onclick="switchView('calendar')">カレンダー</button>
+    <button class="nav-tab" onclick="showToast('レポート機能は開発中です','info')">レポート</button>
+  </div>
+  <div class="header-stats">
+    <span class="hstat">案件数: <strong id="hstat-quests">0</strong></span>
+    <span class="hstat">人材数: <strong id="hstat-units">0</strong></span>
+    <span class="hstat" id="hstat-conflicts" style="color:var(--red);display:none">⚠ 重複 <strong id="hstat-conflict-count">0</strong></span>
+  </div>
+</header>
+
+<div class="app">
+  <!-- LEFT: Quest List -->
+  <div class="quest-panel panel">
+    <div class="panel-header">
+      <span class="panel-title">工事案件</span>
+      <button class="add-btn" onclick="openQuestModal()">＋ 案件追加</button>
+    </div>
+    <div class="quest-list" id="quest-list"></div>
+  </div>
+
+  <!-- CENTER: Assign Board -->
+  <div class="assign-panel">
+    <div id="assign-header" class="assign-header" style="display:none">
+      <div class="quest-detail-title" id="detail-title"></div>
+      <div class="quest-detail-meta" id="detail-meta"></div>
+      <div class="assign-actions">
+        <button class="action-btn primary" onclick="autoAssign()">⚡ 自動アサイン</button>
+        <button class="action-btn" onclick="clearAssign()">クリア</button>
+      </div>
+    </div>
+    <div class="assign-body" id="assign-body">
+      <div class="empty-state">
+        <div class="empty-state-icon">🏗️</div>
+        <div class="empty-state-text">案件を選択してください</div>
+        <div class="empty-state-sub">左の案件一覧から案件を選ぶか、新規追加してください</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- RIGHT: Unit Roster -->
+  <div class="roster-panel panel">
+    <div class="panel-header">
+      <span class="panel-title">人材ロスター</span>
+      <button class="add-btn" onclick="openUnitModal()">＋ 追加</button>
+    </div>
+    <div class="roster-search">
+      <input class="search-input" type="text" placeholder="名前・資格で検索…" oninput="filterRoster(this.value)" id="search-input">
+    </div>
+    <div class="roster-list" id="roster-list"></div>
+  </div>
+</div>
+
+<!-- ═══ CALENDAR VIEW ═══ -->
+<div id="calendar-view">
+  <div class="cal-toolbar">
+    <button class="cal-nav-btn" onclick="calNav(-1)">◀ 前月</button>
+    <div class="cal-month-label" id="cal-month-label"></div>
+    <button class="cal-nav-btn" onclick="calNav(1)">次月 ▶</button>
+    <button class="cal-nav-btn" onclick="calGoToday()">今日</button>
+    <div style="margin-left:8px;display:flex;gap:6px;">
+      <div class="cal-filter-chip active" id="filter-all" onclick="setFilter('all',this)">全員</div>
+      <div class="cal-filter-chip" id="filter-conflict" onclick="setFilter('conflict',this)">⚠ 重複のみ</div>
+      <div class="cal-filter-chip" id="filter-free" onclick="setFilter('free',this)">空き人材</div>
+    </div>
+    <div class="cal-legend" style="margin-left:auto;">
+      <div class="legend-item"><div class="legend-dot" style="background:var(--rarity2)"></div>EASY</div>
+      <div class="legend-item"><div class="legend-dot" style="background:var(--blue)"></div>HARD</div>
+      <div class="legend-item"><div class="legend-dot" style="background:var(--purple)"></div>EXPERT</div>
+      <div class="legend-item"><div class="legend-dot" style="background:var(--rarity5)"></div>LEGEND</div>
+      <div class="legend-item"><div class="legend-dot" style="background:var(--red);outline:1.5px solid var(--red);outline-offset:1px;"></div>重複</div>
+    </div>
+  </div>
+  <div class="gantt-wrapper" id="gantt-wrapper">
+    <div id="gantt-inner"></div>
+  </div>
+  <div class="cal-summary" id="cal-summary"></div>
+</div>
+
+<!-- Affinity Modal -->
+<div class="modal-overlay" id="affinity-modal" style="display:none" onclick="closeModal(event,'affinity-modal')">
+  <div class="modal" style="width:500px;max-width:95vw;" onclick="event.stopPropagation()">
+    <div class="modal-title" id="aff-modal-title">相性設定</div>
+    <div id="aff-unit-info" style="display:flex;align-items:center;gap:10px;margin-bottom:16px;padding:10px 12px;background:var(--bg3);border-radius:8px;"></div>
+
+    <div class="section-label" style="margin-bottom:8px;">現在の相性ルール</div>
+    <div id="aff-relations-list" style="margin-bottom:14px;min-height:32px;"></div>
+
+    <div style="background:var(--bg3);border-radius:8px;padding:12px;border:1px solid var(--border);">
+      <div class="section-label" style="margin-bottom:10px;">新しいルールを追加</div>
+      <div class="form-row">
+        <label class="form-label">相手の人材</label>
+        <select class="form-select" id="aff-target-id"></select>
+      </div>
+      <div class="form-row">
+        <label class="form-label">ルールの種類</label>
+        <select class="form-select" id="aff-type" onchange="updateAffTypeUI()">
+          <option value="good">💚 相性が良い（効率UP）</option>
+          <option value="bad">💔 相性が悪い（トラブル率UP）</option>
+          <option value="same_rarity_bad">⚠ 同レアリティでNG</option>
+          <option value="required">🔗 必ずセットで入れたい</option>
+        </select>
+      </div>
+      <div id="aff-value-row" class="form-row">
+        <label class="form-label">効果の強さ（%）</label>
+        <input class="form-input" id="aff-value" type="number" value="15" min="1" max="100" placeholder="例: 15">
+      </div>
+      <div class="form-row">
+        <label class="form-label">メモ（任意）</label>
+        <input class="form-input" id="aff-note" placeholder="例: 同じ現場経験あり">
+      </div>
+      <button class="modal-submit" style="width:100%;margin-top:4px;" onclick="addRelation()">ルールを追加</button>
+    </div>
+
+    <div class="modal-actions" style="margin-top:16px;">
+      <button class="modal-cancel" onclick="document.getElementById('affinity-modal').style.display='none'">閉じる</button>
+    </div>
+  </div>
+</div>
+
+
+<div class="modal-overlay" id="quest-modal" style="display:none" onclick="closeModal(event,'quest-modal')">
+  <div class="modal" onclick="event.stopPropagation()">
+    <div class="modal-title" id="q-modal-title">案件を追加</div>
+    <input type="hidden" id="q-edit-id">
+    <div class="form-row">
+      <label class="form-label">案件名</label>
+      <input class="form-input" id="q-name" placeholder="例: 新宿ビル 給排水設備工事">
+    </div>
+    <div class="form-row form-row-2">
+      <div>
+        <label class="form-label">開始日</label>
+        <input class="form-input" id="q-start" type="date">
+      </div>
+      <div>
+        <label class="form-label">終了日</label>
+        <input class="form-input" id="q-end" type="date">
+      </div>
+    </div>
+    <div class="form-row">
+      <label class="form-label">工事金額（円）</label>
+      <input class="form-input" id="q-amount" type="number" placeholder="例: 45000000" oninput="updateDifficulty()">
+      <div id="q-diff-preview" style="font-size:11px;color:var(--text2);margin-top:4px;"></div>
+    </div>
+    <div class="form-row">
+      <label class="form-label">必要資格（カンマ区切り）</label>
+      <input class="form-input" id="q-skills" placeholder="例: 1級管工事施工管理技士, 給水装置工事主任技術者">
+    </div>
+    <div class="modal-actions">
+      <button class="modal-cancel" onclick="document.getElementById('quest-modal').style.display='none'">キャンセル</button>
+      <button class="modal-submit" id="q-submit-btn" onclick="saveQuest()">追加</button>
+    </div>
+  </div>
+</div>
+
+
+<!-- Unit Modal -->
+<div class="modal-overlay" id="unit-modal" style="display:none" onclick="closeModal(event,'unit-modal')">
+  <div class="modal" onclick="event.stopPropagation()">
+    <div class="modal-title" id="u-modal-title">人材を追加</div>
+    <input type="hidden" id="u-edit-id">
+    <div class="form-row">
+      <label class="form-label">名前</label>
+      <input class="form-input" id="u-name" placeholder="例: 田中 剛">
+    </div>
+    <div class="form-row form-row-2">
+      <div>
+        <label class="form-label">生年月日</label>
+        <input class="form-input" id="u-birthdate" type="date" oninput="updateAgePreview()">
+      </div>
+      <div>
+        <label class="form-label">年齢</label>
+        <div id="u-age-preview" style="font-size:22px;font-weight:500;color:var(--text);padding:6px 0;min-height:36px;">—</div>
+      </div>
+    </div>
+    <div class="form-row">
+      <label class="form-label">入社日</label>
+      <input class="form-input" id="u-joindate" type="date" oninput="updateTenurePreview()">
+      <div id="u-tenure-preview" style="font-size:11px;color:var(--text2);margin-top:4px;"></div>
+    </div>
+    <div class="form-row">
+      <label class="form-label">保有資格（カンマ区切り）</label>
+      <input class="form-input" id="u-skills" placeholder="例: 1級管工事施工管理技士, 給水装置工事主任技術者">
+    </div>
+    <div class="form-row form-row-2">
+      <div>
+        <label class="form-label">レアリティ</label>
+        <select class="form-select" id="u-rarity">
+          <option value="1">★ N（一般）</option>
+          <option value="2">★★ R（熟練）</option>
+          <option value="3" selected>★★★ SR（上級）</option>
+          <option value="4">★★★★ SSR（エキスパート）</option>
+          <option value="5">★★★★★ UR（レジェンド）</option>
+        </select>
+      </div>
+      <div>
+        <label class="form-label">属性</label>
+        <select class="form-select" id="u-affinity">
+          <option value="fire">🔴 炎（リーダー）</option>
+          <option value="water">🔵 水（調整役）</option>
+          <option value="earth">🟡 土（職人）</option>
+          <option value="wind">🟢 風（機動力）</option>
+        </select>
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button class="modal-cancel" onclick="document.getElementById('unit-modal').style.display='none'">キャンセル</button>
+      <button class="modal-submit" id="u-submit-btn" onclick="saveUnit()">追加</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ── DATA ──
+const AVATARS = ['🦺','👷','🔧','⚡','🪛','🏗️','🔨','🪚','🧱','🔩'];
+const RARITY_LABELS = { 1:'N', 2:'R', 3:'SR', 4:'SSR', 5:'UR' };
+const RARITY_STARS  = { 1:'★', 2:'★★', 3:'★★★', 4:'★★★★', 5:'★★★★★' };
+const AFFINITY_LABELS = { fire:'炎', water:'水', earth:'土', wind:'風' };
+const REL_LABELS = {
+  good:            { icon:'💚', label:'相性良い',       color:'var(--green)' },
+  bad:             { icon:'💔', label:'相性悪い',       color:'var(--red)' },
+  same_rarity_bad: { icon:'⚠', label:'同レアリティNG', color:'var(--accent)' },
+  required:        { icon:'🔗', label:'セット必須',     color:'var(--blue)' },
+};
+
+// relations: [{targetId, type, value, note}] stored on each unit
+function getRelationBetween(ua, ub) {
+  if (!ua || !ub) return null;
+  const r = (ua.relations || []).find(r => r.targetId === ub.id)
+         || (ub.relations || []).find(r => r.targetId === ua.id);
+  return r || null;
+}
+function evalRelation(rel, ua, ub) {
+  if (!rel) return null;
+  if (rel.type === 'same_rarity_bad' && ua.rarity !== ub.rarity) return null;
+  return rel;
+}
+const DIFF_LEVELS = [
+  { max: 5000000,    level: 1, label: 'EASY',    color: 'var(--rarity1)' },
+  { max: 15000000,   level: 2, label: 'NORMAL',  color: 'var(--rarity2)' },
+  { max: 50000000,   level: 3, label: 'HARD',    color: 'var(--blue)' },
+  { max: 150000000,  level: 4, label: 'EXPERT',  color: 'var(--purple)' },
+  { max: Infinity,   level: 5, label: 'LEGEND',  color: 'var(--rarity5)' },
+];
+
+let quests = [], units = [], selectedQuestId = null;
+
+function getDifficulty(amountMan) {
+  return DIFF_LEVELS.find(d => amountMan <= d.max) || DIFF_LEVELS[4];
+}
+function getRequiredHeadcount(diff) {
+  return [0, 2, 3, 4, 6, 8][diff.level];
+}
+
+// ── INIT DATA ──
+function initSampleData() {
+  quests = [
+    { id: 'q1', name: '新宿ビル 給排水設備工事', start: '2024-06-01', end: '2024-08-31', amount: 45000000, skills: ['1級管工事施工管理技士', '給水装置工事主任技術者'], assignedIds: [] },
+    { id: 'q2', name: '品川マンション 空調設備新設', start: '2024-07-15', end: '2024-11-30', amount: 120000000, skills: ['1級管工事施工管理技士', '冷凍機械責任者'], assignedIds: [] },
+    { id: 'q3', name: '渋谷商業施設 ガス配管改修', start: '2024-06-10', end: '2024-07-20', amount: 8000000, skills: ['ガス主任技術者'], assignedIds: [] },
+    { id: 'q4', name: '横浜工場 排水処理設備', start: '2024-08-01', end: '2024-09-30', amount: 22000000, skills: ['排水設備工事責任技術者', '2級管工事施工管理技士'], assignedIds: [] },
+  ];
+  units = [
+    { id: 'u1', name: '田中 剛', rarity: 5, affinity: 'fire', skills: ['1級管工事施工管理技士', '給水装置工事主任技術者', 'ガス主任技術者'], avatar: '🦺' },
+    { id: 'u2', name: '鈴木 誠一', rarity: 4, affinity: 'water', skills: ['1級管工事施工管理技士', '冷凍機械責任者'], avatar: '👷' },
+    { id: 'u3', name: '佐藤 理恵', rarity: 3, affinity: 'wind', skills: ['2級管工事施工管理技士', '排水設備工事責任技術者'], avatar: '🔧' },
+    { id: 'u4', name: '山田 浩二', rarity: 3, affinity: 'earth', skills: ['給水装置工事主任技術者', '消防設備士（甲4類）'], avatar: '🪛' },
+    { id: 'u5', name: '伊藤 美咲', rarity: 4, affinity: 'water', skills: ['ガス主任技術者', '冷凍機械責任者'], avatar: '🔩' },
+    { id: 'u6', name: '渡辺 大樹', rarity: 2, affinity: 'earth', skills: ['2級管工事施工管理技士', '排水設備工事責任技術者'], avatar: '🔨' },
+    { id: 'u7', name: '中村 健', rarity: 3, affinity: 'fire', skills: ['給水装置工事主任技術者', '管工事施工管理技士補'], avatar: '🏗️' },
+    { id: 'u8', name: '小林 奈々', rarity: 2, affinity: 'wind', skills: ['消防設備士（甲4類）', '2級管工事施工管理技士'], avatar: '🧱' },
+  ];
+  saveData();
+  render();
+}
+
+function saveData() {
+  localStorage.setItem('kq_quests', JSON.stringify(quests));
+  localStorage.setItem('kq_units', JSON.stringify(units));
+}
+function loadData() {
+  const q = localStorage.getItem('kq_quests');
+  const u = localStorage.getItem('kq_units');
+  if (q && u) { quests = JSON.parse(q); units = JSON.parse(u); render(); }
+  else initSampleData();
+}
+
+// ── CONFLICT DETECTION ──
+function hasConflict(unitId, questId) {
+  return quests.some(q => q.id !== questId && q.assignedIds.includes(unitId) && periodsOverlap(q, quests.find(x => x.id === questId)));
+}
+function periodsOverlap(a, b) {
+  if (!a || !b) return false;
+  return new Date(a.start) <= new Date(b.end) && new Date(a.end) >= new Date(b.start);
+}
+function getUnitConflicts() {
+  const conflicts = {};
+  quests.forEach(q => {
+    q.assignedIds.forEach(uid => {
+      quests.forEach(q2 => {
+        if (q2.id !== q.id && q2.assignedIds.includes(uid) && periodsOverlap(q, q2)) {
+          if (!conflicts[uid]) conflicts[uid] = [];
+          if (!conflicts[uid].includes(q.id)) conflicts[uid].push(q.id);
+          if (!conflicts[uid].includes(q2.id)) conflicts[uid].push(q2.id);
+        }
+      });
+    });
+  });
+  return conflicts;
+}
+
+// ── RENDER ──
+function render() {
+  renderQuestList();
+  renderRoster();
+  if (selectedQuestId) renderAssignBoard(selectedQuestId);
+  updateHeaderStats();
+}
+
+function updateHeaderStats() {
+  document.getElementById('hstat-quests').textContent = quests.length;
+  document.getElementById('hstat-units').textContent = units.length;
+  const conflicts = getUnitConflicts();
+  const count = Object.keys(conflicts).length;
+  const el = document.getElementById('hstat-conflicts');
+  el.style.display = count > 0 ? '' : 'none';
+  document.getElementById('hstat-conflict-count').textContent = count;
+}
+
+function renderQuestList() {
+  const conflicts = getUnitConflicts();
+  const questConflicts = new Set();
+  Object.values(conflicts).forEach(ids => ids.forEach(id => questConflicts.add(id)));
+
+  const el = document.getElementById('quest-list');
+  if (!quests.length) {
+    el.innerHTML = '<div style="padding:20px;text-align:center;color:var(--text3);font-size:12px;">案件がありません<br>「＋ 案件追加」から作成</div>';
+    return;
+  }
+  el.innerHTML = quests.map(q => {
+    const diff = getDifficulty(q.amount);
+    const maxSlots = getRequiredHeadcount(diff);
+    const assigned = q.assignedIds.length;
+    const hasConf = questConflicts.has(q.id);
+    const slotPips = Array.from({length: maxSlots}, (_, i) => {
+      const uid = q.assignedIds[i];
+      const u = uid ? units.find(x => x.id === uid) : null;
+      const isConf = uid && conflicts[uid];
+      return `<div class="slot-pip ${u ? 'filled' : ''}" title="${u ? u.name : '空き'}" style="${u ? `background:${rarityColor(u.rarity)};border-color:${rarityColor(u.rarity)};color:${rarityColor(u.rarity)};` : ''}${isConf ? 'background:var(--red);border-color:var(--red);' : ''}">${u ? u.avatar : '○'}</div>`;
+    }).join('');
+    return `<div class="quest-card diff-${diff.level} ${q.id === selectedQuestId ? 'selected' : ''} ${hasConf ? 'has-conflict' : ''}" onclick="selectQuest('${q.id}')">
+      <div class="quest-top">
+        <div class="quest-name">${q.name}</div>
+        <div style="display:flex;align-items:center;gap:6px;flex-shrink:0;">
+          <div class="diff-badge">${diff.label}</div>
+          <button onclick="event.stopPropagation();editQuest('${q.id}')" title="編集" style="background:none;border:none;cursor:pointer;color:var(--text3);font-size:13px;padding:2px 4px;border-radius:4px;line-height:1;transition:color 0.15s;" onmouseenter="this.style.color='var(--accent)'" onmouseleave="this.style.color='var(--text3)'">✎</button>
+          <button onclick="event.stopPropagation();deleteQuest('${q.id}')" title="この案件を削除" style="background:none;border:none;cursor:pointer;color:var(--text3);font-size:14px;padding:2px 4px;border-radius:4px;line-height:1;transition:color 0.15s;" onmouseenter="this.style.color='var(--red)'" onmouseleave="this.style.color='var(--text3)'">✕</button>
+        </div>
+      </div>
+      <div class="quest-meta">
+        <span>📅 ${q.start} 〜 ${q.end}</span>
+      </div>
+      <div class="quest-amount">¥${Number(q.amount).toLocaleString()}円</div>
+      <div class="quest-slots" style="margin-top:8px;">${slotPips}<span style="font-size:10px;color:var(--text3);margin-left:4px;">${assigned}/${maxSlots}名</span></div>
+      ${hasConf ? '<div class="conflict-tag">⚠ スケジュール重複あり</div>' : ''}
+    </div>`;
+  }).join('');
+}
+
+function rarityColor(r) {
+  return ['','var(--rarity1)','var(--rarity2)','var(--blue)','var(--purple)','var(--rarity5)'][r];
+}
+
+function renderAssignBoard(qid) {
+  const q = quests.find(x => x.id === qid);
+  if (!q) return;
+  const diff = getDifficulty(q.amount);
+  const maxSlots = getRequiredHeadcount(diff);
+  const conflicts = getUnitConflicts();
+
+  document.getElementById('assign-header').style.display = '';
+  document.getElementById('detail-title').textContent = q.name;
+
+  const hasConf = q.assignedIds.some(uid => conflicts[uid]);
+  document.getElementById('detail-meta').innerHTML = `
+    <span class="meta-chip">📅 ${q.start} → ${q.end}</span>
+    <span class="meta-chip">💴 ${Number(q.amount).toLocaleString()}円</span>
+    <span class="meta-chip" style="color:${diff.color}">${diff.label} Lv.${diff.level}</span>
+    <span class="meta-chip">👥 ${q.assignedIds.length}/${maxSlots}名</span>
+    ${hasConf ? '<span class="meta-chip warning">⚠ 重複あり</span>' : ''}
+  `;
+
+  // Skill requirements
+  const reqHtml = q.skills.map(skill => {
+    const met = q.assignedIds.some(uid => {
+      const u = units.find(x => x.id === uid);
+      return u && u.skills.some(s => s.includes(skill) || skill.includes(s.split(' ')[0]));
+    });
+    return `<div class="req-chip ${met ? 'met' : 'unmet'}">
+      <div class="req-dot" style="background:${met ? 'var(--green)' : 'var(--red)'}"></div>
+      ${skill}
+    </div>`;
+  }).join('') + (q.skills.length === 0 ? '<span style="font-size:12px;color:var(--text3)">資格要件なし</span>' : '');
+
+  // Affinity preview (new relation-based)
+  let affinityHtml = '';
+  if (q.assignedIds.length >= 2) {
+    const rows = [];
+    for (let i = 0; i < q.assignedIds.length; i++) {
+      for (let j = i+1; j < q.assignedIds.length; j++) {
+        const ua = units.find(x => x.id === q.assignedIds[i]);
+        const ub = units.find(x => x.id === q.assignedIds[j]);
+        if (!ua || !ub) continue;
+        const rel = getRelationBetween(ua, ub);
+        const active = evalRelation(rel, ua, ub);
+        if (!active) continue;
+        const meta = REL_LABELS[active.type];
+        const valStr = (active.type === 'good' || active.type === 'bad')
+          ? ` ${active.value || 15}%` : '';
+        rows.push(`<div class="affinity-row">
+          <span>${ua.name} × ${ub.name}</span>
+          <span style="margin-left:auto;color:${meta.color}">${meta.icon} ${meta.label}${valStr}</span>
+          ${active.note ? `<span style="font-size:10px;color:var(--text3);margin-left:6px;">${active.note}</span>` : ''}
+        </div>`);
+      }
+    }
+    if (rows.length) {
+      affinityHtml = `<div class="section-label">相性ボーナス／ペナルティ</div><div class="affinity-preview">${rows.join('')}</div>`;
+    }
+  }
+
+  // Unit slots
+  const slotCards = Array.from({length: maxSlots}, (_, i) => {
+    const uid = q.assignedIds[i];
+    const u = uid ? units.find(x => x.id === uid) : null;
+    const isConf = uid && conflicts[uid];
+    if (u) {
+      return `<div class="unit-slot-card filled ${isConf ? 'conflict-unit' : ''}" onclick="removeFromQuest('${qid}','${uid}')" title="クリックで外す">
+        ${isConf ? '<span class="slot-conflict-icon">⚠</span>' : ''}
+        <div class="slot-avatar" style="border-color:${rarityColor(u.rarity)};background:${rarityColor(u.rarity)}22">${u.avatar}</div>
+        <div class="slot-unit-name">${u.name}</div>
+        <div class="slot-unit-role">${AFFINITY_LABELS[u.affinity]}属性</div>
+        <div class="slot-rarity-stars" style="color:${rarityColor(u.rarity)}">${RARITY_STARS[u.rarity]}</div>
+        ${isConf ? '<div style="font-size:10px;color:var(--red);margin-top:3px;">期間重複</div>' : ''}
+      </div>`;
+    }
+    return `<div class="unit-slot-card empty" onclick="showRosterHint()">
+      <div class="empty-plus">＋</div>
+      <div class="empty-label">スロット ${i+1}</div>
+    </div>`;
+  }).join('');
+
+  document.getElementById('assign-body').innerHTML = `
+    <div class="section-label">必要資格</div>
+    <div class="req-grid">${reqHtml}</div>
+    <div class="section-label">アサインメンバー（${q.assignedIds.length}/${maxSlots}名）</div>
+    <div class="unit-slots-grid">${slotCards}</div>
+    ${affinityHtml}
+  `;
+}
+
+function renderRoster(filter = '') {
+  const conflicts = getUnitConflicts();
+  const el = document.getElementById('roster-list');
+  const f = filter.toLowerCase();
+  const filtered = units.filter(u =>
+    !f || u.name.includes(f) || u.skills.some(s => s.toLowerCase().includes(f))
+  );
+  if (!filtered.length) {
+    el.innerHTML = '<div style="padding:16px;text-align:center;color:var(--text3);font-size:12px;">該当する人材がいません</div>';
+    return;
+  }
+  el.innerHTML = filtered.map(u => {
+    const isAssignedHere = selectedQuestId && quests.find(q => q.id === selectedQuestId)?.assignedIds.includes(u.id);
+    const hasConf = !!conflicts[u.id];
+    const dotClass = hasConf ? 'dot-busy' : isAssignedHere ? 'dot-partial' : 'dot-free';
+    const statusTitle = hasConf ? '重複あり' : isAssignedHere ? 'この案件にアサイン済み' : '空き';
+    return `<div class="unit-card ${isAssignedHere ? 'already-assigned' : ''}" onclick="assignUnit('${u.id}')" title="${statusTitle}">
+      <div class="unit-status-dot ${dotClass}" title="${statusTitle}"></div>
+      <div class="unit-avatar r${u.rarity}">${u.avatar}</div>
+      <div class="unit-info">
+        <div class="unit-name">${u.name}</div>
+        <div class="unit-rarity" style="color:${rarityColor(u.rarity)}">${RARITY_STARS[u.rarity]} ${RARITY_LABELS[u.rarity]}${u.birthdate ? ` · ${calcAge(u.birthdate)}歳` : ''}${u.joindate ? ` · 勤続${calcTenure(u.joindate)}` : ''}</div>
+        <div class="unit-skills">${u.skills.join('・')}</div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:2px;flex-shrink:0;">
+        <button onclick="event.stopPropagation();openAffinityModal('${u.id}')" title="相性設定" style="background:none;border:none;cursor:pointer;color:var(--text3);font-size:13px;padding:2px 4px;border-radius:4px;line-height:1;transition:color 0.15s;" onmouseenter="this.style.color='var(--green)'" onmouseleave="this.style.color='var(--text3)'">♥</button>
+        <button onclick="event.stopPropagation();editUnit('${u.id}')" title="編集" style="background:none;border:none;cursor:pointer;color:var(--text3);font-size:13px;padding:2px 4px;border-radius:4px;line-height:1;transition:color 0.15s;" onmouseenter="this.style.color='var(--accent)'" onmouseleave="this.style.color='var(--text3)'">✎</button>
+        <button onclick="event.stopPropagation();deleteUnit('${u.id}')" title="削除" style="background:none;border:none;cursor:pointer;color:var(--text3);font-size:14px;padding:2px 4px;border-radius:4px;line-height:1;transition:color 0.15s;" onmouseenter="this.style.color='var(--red)'" onmouseleave="this.style.color='var(--text3)'">✕</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// ── ACTIONS ──
+function selectQuest(id) {
+  selectedQuestId = id;
+  render();
+}
+
+function assignUnit(uid) {
+  if (!selectedQuestId) { showToast('先に案件を選択してください', 'info'); return; }
+  const q = quests.find(x => x.id === selectedQuestId);
+  const diff = getDifficulty(q.amount);
+  const max = getRequiredHeadcount(diff);
+  if (q.assignedIds.includes(uid)) {
+    removeFromQuest(selectedQuestId, uid);
+    return;
+  }
+  if (q.assignedIds.length >= max) { showToast(`最大${max}名です`, 'error'); return; }
+  q.assignedIds.push(uid);
+  const u = units.find(x => x.id === uid);
+  const isConf = hasConflict(uid, selectedQuestId);
+  showToast(`${u.name} をアサインしました${isConf ? ' ⚠ 期間重複あり' : ''}`, isConf ? 'error' : 'success');
+  saveData(); render();
+}
+
+function removeFromQuest(qid, uid) {
+  const q = quests.find(x => x.id === qid);
+  q.assignedIds = q.assignedIds.filter(x => x !== uid);
+  const u = units.find(x => x.id === uid);
+  showToast(`${u.name} を外しました`, 'info');
+  saveData(); render();
+}
+
+function clearAssign() {
+  if (!selectedQuestId) return;
+  const q = quests.find(x => x.id === selectedQuestId);
+  q.assignedIds = [];
+  showToast('アサインをクリアしました', 'info');
+  saveData(); render();
+}
+
+function autoAssign() {
+  if (!selectedQuestId) return;
+  const q = quests.find(x => x.id === selectedQuestId);
+  const diff = getDifficulty(q.amount);
+  const max = getRequiredHeadcount(diff);
+  q.assignedIds = [];
+
+  // Score each unit
+  const scored = units.map(u => {
+    let score = u.rarity * 20;
+    q.skills.forEach(skill => {
+      if (u.skills.some(s => s.includes(skill.split('').slice(0,4).join('')) || skill.includes(s.split('').slice(0,4).join('')))) score += 50;
+    });
+    if (!hasConflict(u.id, q.id)) score += 30;
+    return { u, score };
+  }).sort((a, b) => b.score - a.score);
+
+  // Build team greedily with affinity
+  const team = [];
+  for (const { u } of scored) {
+    if (team.length >= max) break;
+    team.push(u);
+  }
+  q.assignedIds = team.map(u => u.id);
+  showToast(`⚡ ${team.length}名を自動アサインしました`, 'success');
+  saveData(); render();
+}
+
+function deleteUnit(id) {
+  const u = units.find(x => x.id === id);
+  if (!confirm(`「${u.name}」を削除しますか？\nアサイン済みの案件からも外れます。`)) return;
+  units = units.filter(x => x.id !== id);
+  quests.forEach(q => { q.assignedIds = q.assignedIds.filter(x => x !== id); });
+  showToast(`「${u.name}」を削除しました`, 'info');
+  saveData(); render();
+}
+
+
+function deleteQuest(id) {
+  const q = quests.find(x => x.id === id);
+  if (!confirm(`「${q.name}」を削除しますか？`)) return;
+  quests = quests.filter(x => x.id !== id);
+  if (selectedQuestId === id) selectedQuestId = null;
+  showToast(`「${q.name}」を削除しました`, 'info');
+  saveData(); render();
+}
+
+
+function showRosterHint() { showToast('右のロスターから人材をクリックしてアサイン', 'info'); }
+
+// ── MODALS ──
+function openQuestModal() {
+  document.getElementById('q-modal-title').textContent = '案件を追加';
+  document.getElementById('q-submit-btn').textContent = '追加';
+  document.getElementById('q-edit-id').value = '';
+  const today = new Date().toISOString().split('T')[0];
+  document.getElementById('q-start').value = today;
+  document.getElementById('q-end').value = '';
+  document.getElementById('q-name').value = '';
+  document.getElementById('q-amount').value = '';
+  document.getElementById('q-skills').value = '';
+  document.getElementById('q-diff-preview').textContent = '';
+  document.getElementById('quest-modal').style.display = 'flex';
+}
+function editQuest(id) {
+  const q = quests.find(x => x.id === id);
+  document.getElementById('q-modal-title').textContent = '案件を編集';
+  document.getElementById('q-submit-btn').textContent = '保存';
+  document.getElementById('q-edit-id').value = id;
+  document.getElementById('q-name').value = q.name;
+  document.getElementById('q-start').value = q.start;
+  document.getElementById('q-end').value = q.end;
+  document.getElementById('q-amount').value = q.amount;
+  document.getElementById('q-skills').value = q.skills.join(', ');
+  document.getElementById('quest-modal').style.display = 'flex';
+  updateDifficulty();
+}
+function saveQuest() {
+  const name = document.getElementById('q-name').value.trim();
+  const start = document.getElementById('q-start').value;
+  const end = document.getElementById('q-end').value;
+  const amount = parseFloat(document.getElementById('q-amount').value);
+  const skillsRaw = document.getElementById('q-skills').value;
+  if (!name || !start || !end || isNaN(amount)) { showToast('必須項目を入力してください', 'error'); return; }
+  const skills = skillsRaw ? skillsRaw.split(',').map(s => s.trim()).filter(Boolean) : [];
+  const editId = document.getElementById('q-edit-id').value;
+  if (editId) {
+    const q = quests.find(x => x.id === editId);
+    q.name = name; q.start = start; q.end = end; q.amount = amount; q.skills = skills;
+    showToast('案件を更新しました', 'success');
+  } else {
+    quests.push({ id: 'q' + Date.now(), name, start, end, amount, skills, assignedIds: [] });
+    showToast('案件を追加しました', 'success');
+  }
+  document.getElementById('quest-modal').style.display = 'none';
+  saveData(); render();
+}
+function closeModal(e, id) { if (e.target.classList.contains('modal-overlay')) document.getElementById(id).style.display = 'none'; }
+
+function updateDifficulty() {
+  const amt = parseFloat(document.getElementById('q-amount').value);
+  if (!isNaN(amt)) {
+    const d = getDifficulty(amt);
+    document.getElementById('q-diff-preview').innerHTML = `→ 難易度: <span style="color:${d.color};font-weight:500">${d.label} (Lv.${d.level})</span>　必要人数: ${getRequiredHeadcount(d)}名`;
+  }
+}
+
+// ── UNIT HELPERS ──
+function calcAge(birthdate) {
+  if (!birthdate) return null;
+  const today = new Date();
+  const b = new Date(birthdate);
+  let age = today.getFullYear() - b.getFullYear();
+  const m = today.getMonth() - b.getMonth();
+  if (m < 0 || (m === 0 && today.getDate() < b.getDate())) age--;
+  return age;
+}
+function calcTenure(joindate) {
+  if (!joindate) return null;
+  const today = new Date();
+  const j = new Date(joindate);
+  let years = today.getFullYear() - j.getFullYear();
+  let months = today.getMonth() - j.getMonth();
+  if (months < 0) { years--; months += 12; }
+  if (years > 0 && months > 0) return `${years}年${months}ヶ月`;
+  if (years > 0) return `${years}年`;
+  return `${months}ヶ月`;
+}
+function updateAgePreview() {
+  const val = document.getElementById('u-birthdate').value;
+  const el = document.getElementById('u-age-preview');
+  if (!val) { el.textContent = '—'; return; }
+  const age = calcAge(val);
+  el.textContent = age !== null ? `${age}歳` : '—';
+}
+function updateTenurePreview() {
+  const val = document.getElementById('u-joindate').value;
+  const el = document.getElementById('u-tenure-preview');
+  if (!val) { el.textContent = ''; return; }
+  const t = calcTenure(val);
+  el.textContent = t ? `→ 勤続 ${t}` : '';
+}
+
+function openUnitModal() {
+  document.getElementById('u-modal-title').textContent = '人材を追加';
+  document.getElementById('u-submit-btn').textContent = '追加';
+  document.getElementById('u-edit-id').value = '';
+  document.getElementById('u-name').value = '';
+  document.getElementById('u-birthdate').value = '';
+  document.getElementById('u-joindate').value = '';
+  document.getElementById('u-skills').value = '';
+  document.getElementById('u-rarity').value = '3';
+  document.getElementById('u-affinity').value = 'fire';
+  document.getElementById('u-age-preview').textContent = '—';
+  document.getElementById('u-tenure-preview').textContent = '';
+  document.getElementById('unit-modal').style.display = 'flex';
+}
+function editUnit(id) {
+  const u = units.find(x => x.id === id);
+  document.getElementById('u-modal-title').textContent = '人材を編集';
+  document.getElementById('u-submit-btn').textContent = '保存';
+  document.getElementById('u-edit-id').value = id;
+  document.getElementById('u-name').value = u.name;
+  document.getElementById('u-birthdate').value = u.birthdate || '';
+  document.getElementById('u-joindate').value = u.joindate || '';
+  document.getElementById('u-skills').value = u.skills.join(', ');
+  document.getElementById('u-rarity').value = u.rarity;
+  document.getElementById('u-affinity').value = u.affinity;
+  updateAgePreview();
+  updateTenurePreview();
+  document.getElementById('unit-modal').style.display = 'flex';
+}
+function saveUnit() {
+  const name = document.getElementById('u-name').value.trim();
+  if (!name) { showToast('名前を入力してください', 'error'); return; }
+  const skillsRaw = document.getElementById('u-skills').value;
+  const skills = skillsRaw ? skillsRaw.split(',').map(s => s.trim()).filter(Boolean) : [];
+  const rarity = parseInt(document.getElementById('u-rarity').value);
+  const affinity = document.getElementById('u-affinity').value;
+  const birthdate = document.getElementById('u-birthdate').value || null;
+  const joindate = document.getElementById('u-joindate').value || null;
+  const editId = document.getElementById('u-edit-id').value;
+  if (editId) {
+    const u = units.find(x => x.id === editId);
+    Object.assign(u, { name, skills, rarity, affinity, birthdate, joindate });
+    showToast(`${name} を更新しました`, 'success');
+  } else {
+    const avatar = AVATARS[units.length % AVATARS.length];
+    units.push({ id: 'u' + Date.now(), name, rarity, affinity, skills, avatar, birthdate, joindate });
+    showToast(`${name} を追加しました`, 'success');
+  }
+  document.getElementById('unit-modal').style.display = 'none';
+  saveData(); render();
+}
+
+function addUnit() { saveUnit(); } // 後方互換
+
+// ── AFFINITY MODAL ──
+let affinityUnitId = null;
+
+function openAffinityModal(uid) {
+  affinityUnitId = uid;
+  const u = units.find(x => x.id === uid);
+
+  document.getElementById('aff-modal-title').textContent = `相性設定 — ${u.name}`;
+  document.getElementById('aff-unit-info').innerHTML = `
+    <div class="unit-avatar r${u.rarity}" style="width:36px;height:36px;font-size:16px;border:2px solid ${rarityColor(u.rarity)};background:${rarityColor(u.rarity)}22;display:flex;align-items:center;justify-content:center;border-radius:50%;">${u.avatar}</div>
+    <div>
+      <div style="font-size:14px;font-weight:500;">${u.name}</div>
+      <div style="font-size:11px;color:${rarityColor(u.rarity)}">${RARITY_STARS[u.rarity]} ${RARITY_LABELS[u.rarity]} · ${AFFINITY_LABELS[u.affinity]}属性</div>
+    </div>
+  `;
+
+  // Populate target select (exclude self)
+  const sel = document.getElementById('aff-target-id');
+  sel.innerHTML = units.filter(x => x.id !== uid).map(x =>
+    `<option value="${x.id}">${x.avatar} ${x.name}（${RARITY_LABELS[x.rarity]}）</option>`
+  ).join('');
+
+  updateAffTypeUI();
+  renderRelationsList(uid);
+  document.getElementById('aff-note').value = '';
+  document.getElementById('aff-value').value = '15';
+  document.getElementById('affinity-modal').style.display = 'flex';
+}
+
+function updateAffTypeUI() {
+  const type = document.getElementById('aff-type').value;
+  const row = document.getElementById('aff-value-row');
+  row.style.display = (type === 'good' || type === 'bad') ? '' : 'none';
+}
+
+function renderRelationsList(uid) {
+  const u = units.find(x => x.id === uid);
+  const rels = u.relations || [];
+  const el = document.getElementById('aff-relations-list');
+  if (!rels.length) {
+    el.innerHTML = '<div style="font-size:12px;color:var(--text3);padding:6px 0;">まだルールがありません</div>';
+    return;
+  }
+  el.innerHTML = rels.map((r, i) => {
+    const target = units.find(x => x.id === r.targetId);
+    if (!target) return '';
+    const meta = REL_LABELS[r.type] || { icon:'?', label:r.type, color:'var(--text2)' };
+    const valStr = (r.type === 'good' || r.type === 'bad') ? ` ${r.value || 15}%` : '';
+    return `<div style="display:flex;align-items:center;gap:8px;padding:7px 10px;background:var(--bg3);border-radius:6px;margin-bottom:5px;border:1px solid var(--border);">
+      <span style="font-size:14px">${target.avatar}</span>
+      <div style="flex:1;min-width:0;">
+        <div style="font-size:12px;font-weight:500;color:var(--text)">${target.name}</div>
+        <div style="font-size:11px;color:${meta.color}">${meta.icon} ${meta.label}${valStr}${r.note ? ` · ${r.note}` : ''}</div>
+      </div>
+      <button onclick="deleteRelation('${uid}',${i})" style="background:none;border:none;cursor:pointer;color:var(--text3);font-size:13px;padding:2px 6px;" onmouseenter="this.style.color='var(--red)'" onmouseleave="this.style.color='var(--text3)'">✕</button>
+    </div>`;
+  }).join('');
+}
+
+function addRelation() {
+  const u = units.find(x => x.id === affinityUnitId);
+  if (!u) return;
+  const targetId = document.getElementById('aff-target-id').value;
+  const type = document.getElementById('aff-type').value;
+  const value = parseInt(document.getElementById('aff-value').value) || 15;
+  const note = document.getElementById('aff-note').value.trim();
+  if (!u.relations) u.relations = [];
+  // prevent duplicate target
+  if (u.relations.some(r => r.targetId === targetId && r.type === type)) {
+    showToast('同じルールがすでに存在します', 'error'); return;
+  }
+  u.relations.push({ targetId, type, value, note });
+  renderRelationsList(affinityUnitId);
+  document.getElementById('aff-note').value = '';
+  showToast('相性ルールを追加しました', 'success');
+  saveData(); render();
+}
+
+function deleteRelation(uid, idx) {
+  const u = units.find(x => x.id === uid);
+  if (!u || !u.relations) return;
+  u.relations.splice(idx, 1);
+  renderRelationsList(uid);
+  showToast('ルールを削除しました', 'info');
+  saveData(); render();
+}
+
+
+function showToast(msg, type = 'info') {
+  const t = document.createElement('div');
+  t.className = `toast ${type}`;
+  t.textContent = msg;
+  document.body.appendChild(t);
+  setTimeout(() => t.remove(), 3000);
+}
+
+// ── VIEW SWITCHING ──
+let currentView = 'assign';
+function switchView(view) {
+  currentView = view;
+  document.querySelector('.app').style.display = view === 'assign' ? 'flex' : 'none';
+  document.getElementById('calendar-view').style.display = view === 'calendar' ? 'flex' : 'none';
+  document.getElementById('nav-assign').classList.toggle('active', view === 'assign');
+  document.getElementById('nav-calendar').classList.toggle('active', view === 'calendar');
+  if (view === 'calendar') renderCalendar();
+}
+
+// ── CALENDAR STATE ──
+let calYear = new Date().getFullYear();
+let calMonth = new Date().getMonth(); // 0-indexed, show 3 months
+let calFilter = 'all';
+const DAY_W = 28; // px per day cell
+const NAME_W = 180;
+
+function calNav(dir) {
+  calMonth += dir;
+  if (calMonth > 11) { calMonth = 0; calYear++; }
+  if (calMonth < 0)  { calMonth = 11; calYear--; }
+  renderCalendar();
+}
+function calGoToday() {
+  calYear = new Date().getFullYear();
+  calMonth = new Date().getMonth();
+  renderCalendar();
+  setTimeout(() => {
+    const tl = document.querySelector('.today-line');
+    if (tl) tl.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
+  }, 100);
+}
+function setFilter(f, el) {
+  calFilter = f;
+  document.querySelectorAll('.cal-filter-chip').forEach(c => c.classList.remove('active'));
+  el.classList.add('active');
+  renderCalendar();
+}
+
+// ── CALENDAR RENDER ──
+function renderCalendar() {
+  const conflicts = getUnitConflicts();
+
+  // Show 3 months: prev, current, next
+  const viewStart = new Date(calYear, calMonth - 1, 1);
+  const viewEnd   = new Date(calYear, calMonth + 2, 0); // last day of next month
+
+  // Build day array
+  const days = [];
+  for (let d = new Date(viewStart); d <= viewEnd; d.setDate(d.getDate() + 1)) {
+    days.push(new Date(d));
+  }
+  const totalDays = days.length;
+  const totalW = totalDays * DAY_W;
+
+  const today = new Date(); today.setHours(0,0,0,0);
+  const todayIdx = days.findIndex(d => d.toDateString() === today.toDateString());
+
+  // Month label
+  const monthNames = ['1月','2月','3月','4月','5月','6月','7月','8月','9月','10月','11月','12月'];
+  document.getElementById('cal-month-label').textContent =
+    `${calYear}年 ${monthNames[calMonth]}（前後1ヶ月表示）`;
+
+  // Filter units
+  let displayUnits = units;
+  if (calFilter === 'conflict') displayUnits = units.filter(u => conflicts[u.id]);
+  if (calFilter === 'free') displayUnits = units.filter(u => !conflicts[u.id]);
+
+  // Helper: date string → index
+  function dateToIdx(str) {
+    const d = new Date(str); d.setHours(0,0,0,0);
+    const idx = days.findIndex(x => x.toDateString() === d.toDateString());
+    return idx;
+  }
+
+  // Build month spans for header
+  const monthSpans = [];
+  let cur = null;
+  days.forEach((d, i) => {
+    const mk = d.getFullYear() + '-' + d.getMonth();
+    if (!cur || cur.key !== mk) {
+      cur = { key: mk, label: `${d.getFullYear()}年${monthNames[d.getMonth()]}`, start: i, count: 0 };
+      monthSpans.push(cur);
+    }
+    cur.count++;
+  });
+
+  // ── HTML BUILD ──
+  const DIFF_COLORS = {
+    1: '#8b90a8', 2: '#3dd68c', 3: '#4a9eff', 4: '#c77dff', 5: '#f5a623'
+  };
+
+  // Month header row
+  const monthHeaderCells = monthSpans.map(m =>
+    `<div class="gantt-month-label-cell" style="width:${m.count * DAY_W}px">${m.label}</div>`
+  ).join('');
+
+  // Day header row
+  const dayNames = ['日','月','火','水','木','金','土'];
+  const dayHeaderCells = days.map((d, i) => {
+    const wd = d.getDay();
+    const isWe = wd === 0 || wd === 6;
+    const isToday = i === todayIdx;
+    return `<div class="gantt-day-cell${isWe?' weekend':''}${isToday?' today':''}" style="width:${DAY_W}px">
+      <div class="day-num">${d.getDate()}</div>
+      <div class="day-name" style="${wd===0?'color:rgba(255,85,85,0.7)':wd===6?'color:rgba(74,158,255,0.7)':''}">${dayNames[wd]}</div>
+    </div>`;
+  }).join('');
+
+  // Timeline background cells
+  function makeCells(extraClass='') {
+    return days.map((d, i) => {
+      const wd = d.getDay();
+      const isWe = wd === 0 || wd === 6;
+      const isToday = i === todayIdx;
+      return `<div class="gantt-cell${isWe?' weekend':''}${isToday?' today-col':''}" style="width:${DAY_W}px;height:100%"></div>`;
+    }).join('');
+  }
+
+  // ── LANE ASSIGNMENT: prevents bar overlap within a row ──
+  function assignLanes(bars) {
+    // bars: [{si, ei, ...}]  sorted by si
+    const lanes = []; // lanes[laneIdx] = last ei used
+    return bars.map(bar => {
+      let lane = lanes.findIndex(lastEi => lastEi < bar.si);
+      if (lane === -1) { lane = lanes.length; lanes.push(0); }
+      lanes[lane] = bar.ei;
+      return { ...bar, lane };
+    });
+  }
+  const BAR_H = 22;
+  const BAR_GAP = 4;
+  const ROW_PAD = 6;
+
+  // Build rows per unit
+  const unitRows = displayUnits.map(u => {
+    const hasConf = !!conflicts[u.id];
+    const rc = rarityColor(u.rarity);
+
+    // Find quests assigned to this unit, build bar descriptors
+    const assignedQuests = quests.filter(q => q.assignedIds.includes(u.id));
+    const barDescs = assignedQuests.map(q => {
+      const diff = getDifficulty(q.amount);
+      const color = DIFF_COLORS[diff.level];
+      const startIdx = dateToIdx(q.start);
+      const endIdx   = dateToIdx(q.end);
+      if (startIdx < 0 && endIdx < 0) return null;
+      const si = Math.max(0, startIdx < 0 ? 0 : startIdx);
+      const ei = Math.min(totalDays - 1, endIdx < 0 ? totalDays - 1 : endIdx);
+      if (si > ei || si >= totalDays) return null;
+      const isConf = hasConf && conflicts[u.id]?.includes(q.id);
+      return { q, color, si, ei, isConf };
+    }).filter(Boolean).sort((a, b) => a.si - b.si);
+
+    const laned = assignLanes(barDescs);
+    const numLanes = laned.length ? Math.max(...laned.map(b => b.lane)) + 1 : 1;
+    const rowH = ROW_PAD * 2 + numLanes * BAR_H + (numLanes - 1) * BAR_GAP;
+
+    const bars = laned.map(({ q, color, si, ei, isConf, lane }) => {
+      const left  = si * DAY_W;
+      const width = (ei - si + 1) * DAY_W - 2;
+      const top   = ROW_PAD + lane * (BAR_H + BAR_GAP);
+      return `<div class="quest-bar${isConf ? ' conflict-bar' : ''}"
+        style="left:${left}px;width:${width}px;top:${top}px;height:${BAR_H}px;
+               background:${color}22;border:1.5px solid ${color};color:${color};"
+        onmouseenter="showCalTooltip(event,'${q.id}')"
+        onmouseleave="hideCalTooltip()"
+        onclick="switchView('assign');selectQuest('${q.id}')"
+        title="${q.name}">
+        <span class="quest-bar-name">${q.name}</span>
+      </div>`;
+    }).join('');
+
+    const todayLine = todayIdx >= 0
+      ? `<div class="today-line" style="left:${todayIdx * DAY_W + DAY_W/2}px"></div>` : '';
+
+    return `<div class="gantt-row${hasConf ? ' conflict-row' : ''}" style="min-height:${rowH}px;height:${rowH}px;">
+      <div class="gantt-row-name" style="height:${rowH}px;">
+        <div class="row-avatar" style="background:${rc}22;border-color:${rc}">${u.avatar}</div>
+        <div class="row-name-text" title="${u.name}">${u.name}</div>
+        ${hasConf ? '<div class="row-conflict-icon">⚠</div>' : ''}
+      </div>
+      <div class="gantt-timeline" style="width:${totalW}px;position:relative;height:${rowH}px;">
+        ${makeCells()}
+        ${todayLine}
+        ${bars}
+      </div>
+    </div>`;
+  }).join('');
+
+  // Quest summary rows (bottom section)
+  const questRows = quests.map(q => {
+    const diff = getDifficulty(q.amount);
+    const color = DIFF_COLORS[diff.level];
+    const startIdx = dateToIdx(q.start);
+    const endIdx   = dateToIdx(q.end);
+    const si = Math.max(0, startIdx < 0 ? 0 : startIdx);
+    const ei = Math.min(totalDays - 1, endIdx < 0 ? totalDays-1 : endIdx);
+    const hasConf = q.assignedIds.some(uid => conflicts[uid]);
+    const todayLine = todayIdx >= 0
+      ? `<div class="today-line" style="left:${todayIdx * DAY_W + DAY_W/2}px"></div>` : '';
+
+    let barHtml = '';
+    if (si <= ei && si < totalDays && startIdx >= 0) {
+      const left = si * DAY_W;
+      const width = (ei - si + 1) * DAY_W - 2;
+      barHtml = `<div class="quest-bar${hasConf?' conflict-bar':''}"
+        style="left:${left}px;width:${width}px;background:${color}33;border:1.5px solid ${color};color:${color};"
+        onmouseenter="showCalTooltip(event,'${q.id}')"
+        onmouseleave="hideCalTooltip()"
+        onclick="switchView('assign');selectQuest('${q.id}')">
+        <span class="quest-bar-name">${q.name}（${q.assignedIds.length}名）</span>
+      </div>`;
+    }
+
+    return `<div class="gantt-row${hasConf?' conflict-row':''}">
+      <div class="gantt-row-name" style="font-size:11px;">
+        <div style="width:8px;height:8px;border-radius:2px;background:${color};flex-shrink:0;"></div>
+        <div class="row-name-text" title="${q.name}">${q.name}</div>
+        ${hasConf ? '<div class="row-conflict-icon">⚠</div>' : ''}
+      </div>
+      <div class="gantt-timeline" style="width:${totalW}px;position:relative;">
+        ${makeCells()}
+        ${todayLine}
+        ${barHtml}
+      </div>
+    </div>`;
+  }).join('');
+
+  const inner = `
+    <div style="min-width:${NAME_W + totalW}px">
+      <!-- Month header -->
+      <div class="gantt-header">
+        <div class="gantt-name-col" style="width:${NAME_W}px">氏名 / 案件</div>
+        <div class="gantt-day-headers">
+          <div>
+            <div style="display:flex">${monthHeaderCells}</div>
+            <div style="display:flex">${dayHeaderCells}</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Unit section -->
+      <div class="gantt-section-header">
+        <div class="gantt-section-label" style="width:${NAME_W}px">人材スケジュール</div>
+        <div style="flex:1;background:var(--bg3);padding:6px 12px;font-size:10px;color:var(--text3);">
+          ← クリックでアサイン画面へ　　⚠ 赤枠 = スケジュール重複
+        </div>
+      </div>
+      ${unitRows || '<div style="padding:16px 12px;font-size:12px;color:var(--text3);">表示する人材がいません</div>'}
+
+      <!-- Quest section -->
+      <div class="gantt-section-header" style="margin-top:2px">
+        <div class="gantt-section-label" style="width:${NAME_W}px">案件ガント</div>
+        <div style="flex:1;background:var(--bg3);"></div>
+      </div>
+      ${questRows}
+    </div>
+  `;
+
+  document.getElementById('gantt-inner').innerHTML = inner;
+
+  // Scroll to today
+  if (todayIdx >= 0) {
+    const wrapper = document.getElementById('gantt-wrapper');
+    const scrollTo = NAME_W + todayIdx * DAY_W - wrapper.clientWidth / 2;
+    wrapper.scrollLeft = Math.max(0, scrollTo);
+  }
+
+  // Summary
+  const conflictCount = Object.keys(conflicts).length;
+  const freeCount = units.filter(u => !conflicts[u.id]).length;
+  const assignedCount = units.filter(u => quests.some(q => q.assignedIds.includes(u.id))).length;
+  document.getElementById('cal-summary').innerHTML = `
+    <span>人材: <strong>${units.length}名</strong></span>
+    <span>稼働中: <strong>${assignedCount}名</strong></span>
+    <span>空き: <strong style="color:var(--green)">${freeCount}名</strong></span>
+    ${conflictCount > 0 ? `<span style="color:var(--red)">⚠ 重複: <strong>${conflictCount}名</strong></span>` : '<span style="color:var(--green)">✓ 重複なし</span>'}
+    <span style="margin-left:auto;color:var(--text3)">案件数: <strong style="color:var(--text2)">${quests.length}件</strong></span>
+  `;
+}
+
+// ── CALENDAR TOOLTIP ──
+function showCalTooltip(e, qid) {
+  const q = quests.find(x => x.id === qid);
+  if (!q) return;
+  const tt = document.getElementById('cal-tooltip');
+  if (!tt) return;
+  const diff = getDifficulty(q.amount);
+  const assignedNames = q.assignedIds.map(id => units.find(x=>x.id===id)?.name).filter(Boolean);
+  const conflicts = getUnitConflicts();
+  const hasConf = q.assignedIds.some(uid => conflicts[uid]);
+  tt.innerHTML = `
+    <div class="tt-title">${q.name}</div>
+    <div class="tt-row"><span>期間</span><span class="tt-val">${q.start} 〜 ${q.end}</span></div>
+    <div class="tt-row"><span>金額</span><span class="tt-val">¥${Number(q.amount).toLocaleString()}円</span></div>
+    <div class="tt-row"><span>難易度</span><span class="tt-val" style="color:${diff.color}">${diff.label} Lv.${diff.level}</span></div>
+    <div class="tt-row"><span>担当</span><span class="tt-val">${assignedNames.length ? assignedNames.join('・') : '未アサイン'}</span></div>
+    ${hasConf ? '<div style="color:var(--red);margin-top:6px;font-size:11px;">⚠ スケジュール重複あり</div>' : ''}
+    <div style="color:var(--text3);font-size:10px;margin-top:6px;">クリックでアサイン画面へ</div>
+  `;
+  tt.style.display = 'block';
+  positionTooltip(e, tt);
+}
+function hideCalTooltip() {
+  const tt = document.getElementById('cal-tooltip');
+  if (tt) tt.style.display = 'none';
+}
+function positionTooltip(e, tt) {
+  if (!tt) return;
+  const x = e.clientX + 12;
+  const y = e.clientY - 10;
+  const maxX = window.innerWidth - tt.offsetWidth - 8;
+  const maxY = window.innerHeight - tt.offsetHeight - 8;
+  tt.style.left = Math.min(x, maxX) + 'px';
+  tt.style.top  = Math.min(y, maxY) + 'px';
+}
+document.addEventListener('mousemove', e => {
+  const tt = document.getElementById('cal-tooltip');
+  if (tt && tt.style.display !== 'none') positionTooltip(e, tt);
+});
+
+// ── BOOT ──
+loadData();
+</script>
+<div class="cal-tooltip" id="cal-tooltip" style="display:none"></div>
+</body>
+</html>
