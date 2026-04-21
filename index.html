@@ -106,12 +106,14 @@ header {
 .quest-card::before {
   content: '';
   position: absolute; left: 0; top: 0; bottom: 0; width: 3px;
+  background: var(--card-accent, var(--diff-default-color));
 }
-.quest-card.diff-1::before { background: var(--rarity1); }
-.quest-card.diff-2::before { background: var(--rarity2); }
-.quest-card.diff-3::before { background: var(--blue); }
-.quest-card.diff-4::before { background: var(--purple); }
-.quest-card.diff-5::before { background: var(--rarity5); }
+.quest-card.diff-1 { --diff-default-color: var(--rarity1); }
+.quest-card.diff-2 { --diff-default-color: var(--rarity2); }
+.quest-card.diff-3 { --diff-default-color: var(--blue); }
+.quest-card.diff-4 { --diff-default-color: var(--purple); }
+.quest-card.diff-5 { --diff-default-color: var(--rarity5); }
+.quest-card.diff-6 { --diff-default-color: var(--red); }
 .quest-card:hover { border-color: var(--border2); background: var(--bg4); }
 .quest-card.selected { border-color: var(--accent); background: rgba(245,166,35,0.06); }
 .quest-card.has-conflict { border-color: var(--red) !important; }
@@ -579,15 +581,191 @@ header {
   font-size: 12px; color: var(--text2);
 }
 .cal-summary strong { color: var(--text); }
+/* ── DRAG & DROP ── */
+.quest-bar.dragging { opacity: 0.55; cursor: grabbing !important; z-index: 50; }
+.gantt-row.drop-target { background: rgba(74,158,255,0.08) !important; outline: 2px dashed var(--blue); outline-offset: -2px; }
+.drag-ghost { position:fixed; pointer-events:none; z-index:300; border-radius:5px; padding:4px 10px; font-size:11px; font-weight:500; white-space:nowrap; box-shadow:0 4px 16px rgba(0,0,0,0.4); display:none; }
+/* ── SKILL TABS ── */
+.skill-tab-btn { font-size:11px;padding:3px 10px;border-radius:4px;background:var(--bg3);color:var(--text2);border:1px solid var(--border);cursor:pointer;font-family:'Noto Sans JP',sans-serif;transition:all 0.15s; }
+.skill-tab-btn.active { background:var(--accent);color:#1a0e00;border-color:var(--accent);font-weight:700; }
+.skill-check-grid { display:grid;grid-template-columns:1fr 1fr;gap:6px; }
+
+/* ── SKILL PICK UI ── */
+.skill-pick-item {
+  display:flex;align-items:center;
+  font-size:11px;color:var(--text2);
+  padding:6px 10px;background:var(--bg3);
+  border-radius:5px;border:1px solid var(--border);
+  cursor:pointer;transition:all 0.15s;user-select:none;
+}
+.skill-pick-item:hover { border-color:var(--border2);color:var(--text); }
+.skill-pick-item.selected {
+  background:rgba(245,166,35,0.12);
+  border-color:var(--accent);color:var(--accent);font-weight:500;
+}
+.skill-tag {
+  display:inline-flex;align-items:center;gap:4px;
+  background:rgba(245,166,35,0.15);border:1px solid rgba(245,166,35,0.4);
+  color:var(--accent);border-radius:4px;padding:2px 8px;font-size:11px;
+}
+.skill-tag-remove {
+  cursor:pointer;color:var(--accent);font-size:13px;line-height:1;
+  opacity:0.7;transition:opacity 0.1s;
+}
+.skill-tag-remove:hover { opacity:1; }
+/* ── ROSTER COLOR CODING ── */
+.unit-card.available-for-quest { border-color:rgba(74,158,255,0.5)!important;background:rgba(74,158,255,0.05)!important; }
+.unit-card.conflict-for-quest { border-color:rgba(255,85,85,0.5)!important;background:rgba(255,85,85,0.05)!important; }
+
+/* ── STATUS VIEW ── */
+.status-unit-item {
+  display:flex;align-items:center;gap:10px;
+  padding:10px 12px;border-radius:8px;
+  border:1px solid var(--border);background:var(--bg3);
+  margin-bottom:6px;cursor:pointer;transition:all 0.15s;
+}
+.status-unit-item:hover { border-color:var(--border2);background:var(--bg4); }
+.status-unit-item.active { border-color:var(--accent);background:rgba(245,166,35,0.06); }
+.status-lv-ring {
+  width:36px;height:36px;border-radius:50%;
+  display:flex;align-items:center;justify-content:center;
+  font-size:11px;font-weight:700;flex-shrink:0;
+  border:2px solid var(--accent);color:var(--accent);
+  background:rgba(245,166,35,0.1);
+}
+.cat-bar-row {
+  display:flex;align-items:center;gap:10px;margin-bottom:8px;
+}
+.cat-bar-label { width:80px;font-size:11px;color:var(--text2);flex-shrink:0;text-align:right; }
+.cat-bar-track {
+  flex:1;height:10px;background:var(--bg4);border-radius:5px;overflow:hidden;
+  position:relative;
+}
+.cat-bar-fill {
+  height:100%;border-radius:5px;transition:width 0.4s ease;
+}
+.cat-lv-label { width:44px;font-size:11px;font-weight:600;color:var(--accent);flex-shrink:0; }
+.xp-admin-row {
+  display:flex;align-items:center;gap:6px;margin-bottom:6px;
+}
+.xp-adj-btn {
+  width:24px;height:24px;border-radius:4px;border:1px solid var(--border2);
+  background:var(--bg3);color:var(--text2);font-size:14px;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;
+  transition:all 0.15s;flex-shrink:0;font-family:'Noto Sans JP',sans-serif;
+}
+.xp-adj-btn:hover { background:var(--bg4);color:var(--accent); }
+.timeline-item {
+  display:flex;gap:12px;padding:10px 0;
+  border-bottom:1px solid var(--border);
+}
+.timeline-dot {
+  width:10px;height:10px;border-radius:50%;flex-shrink:0;margin-top:5px;
+}
+.radar-canvas { display:block;margin:0 auto; }
 </style>
-</head>
 <body>
 
+<!-- Quest Color Picker Modal -->
+<div class="modal-overlay" id="color-modal" style="display:none" onclick="closeModal(event,'color-modal')">
+  <div class="modal" style="width:320px;" onclick="event.stopPropagation()">
+    <div class="modal-title">案件カラーを変更</div>
+    <div id="color-quest-name" style="font-size:13px;color:var(--text2);margin-bottom:14px;"></div>
+    <div style="display:grid;grid-template-columns:repeat(6,1fr);gap:8px;margin-bottom:16px;">
+      <div onclick="selectQuestColor('#4a9eff')" style="width:100%;aspect-ratio:1;border-radius:6px;background:#4a9eff;cursor:pointer;border:2px solid transparent;transition:all 0.15s;" onmouseenter="this.style.transform='scale(1.15)'" onmouseleave="this.style.transform=''"></div>
+      <div onclick="selectQuestColor('#3dd68c')" style="width:100%;aspect-ratio:1;border-radius:6px;background:#3dd68c;cursor:pointer;border:2px solid transparent;transition:all 0.15s;" onmouseenter="this.style.transform='scale(1.15)'" onmouseleave="this.style.transform=''"></div>
+      <div onclick="selectQuestColor('#f5a623')" style="width:100%;aspect-ratio:1;border-radius:6px;background:#f5a623;cursor:pointer;border:2px solid transparent;transition:all 0.15s;" onmouseenter="this.style.transform='scale(1.15)'" onmouseleave="this.style.transform=''"></div>
+      <div onclick="selectQuestColor('#ff5555')" style="width:100%;aspect-ratio:1;border-radius:6px;background:#ff5555;cursor:pointer;border:2px solid transparent;transition:all 0.15s;" onmouseenter="this.style.transform='scale(1.15)'" onmouseleave="this.style.transform=''"></div>
+      <div onclick="selectQuestColor('#c77dff')" style="width:100%;aspect-ratio:1;border-radius:6px;background:#c77dff;cursor:pointer;border:2px solid transparent;transition:all 0.15s;" onmouseenter="this.style.transform='scale(1.15)'" onmouseleave="this.style.transform=''"></div>
+      <div onclick="selectQuestColor('#ff6b9d')" style="width:100%;aspect-ratio:1;border-radius:6px;background:#ff6b9d;cursor:pointer;border:2px solid transparent;transition:all 0.15s;" onmouseenter="this.style.transform='scale(1.15)'" onmouseleave="this.style.transform=''"></div>
+      <div onclick="selectQuestColor('#00d4aa')" style="width:100%;aspect-ratio:1;border-radius:6px;background:#00d4aa;cursor:pointer;border:2px solid transparent;transition:all 0.15s;" onmouseenter="this.style.transform='scale(1.15)'" onmouseleave="this.style.transform=''"></div>
+      <div onclick="selectQuestColor('#ff8c42')" style="width:100%;aspect-ratio:1;border-radius:6px;background:#ff8c42;cursor:pointer;border:2px solid transparent;transition:all 0.15s;" onmouseenter="this.style.transform='scale(1.15)'" onmouseleave="this.style.transform=''"></div>
+      <div onclick="selectQuestColor('#a8e6cf')" style="width:100%;aspect-ratio:1;border-radius:6px;background:#a8e6cf;cursor:pointer;border:2px solid transparent;transition:all 0.15s;" onmouseenter="this.style.transform='scale(1.15)'" onmouseleave="this.style.transform=''"></div>
+      <div onclick="selectQuestColor('#ffd93d')" style="width:100%;aspect-ratio:1;border-radius:6px;background:#ffd93d;cursor:pointer;border:2px solid transparent;transition:all 0.15s;" onmouseenter="this.style.transform='scale(1.15)'" onmouseleave="this.style.transform=''"></div>
+      <div onclick="selectQuestColor('#c2185b')" style="width:100%;aspect-ratio:1;border-radius:6px;background:#c2185b;cursor:pointer;border:2px solid transparent;transition:all 0.15s;" onmouseenter="this.style.transform='scale(1.15)'" onmouseleave="this.style.transform=''"></div>
+      <div onclick="selectQuestColor('#7986cb')" style="width:100%;aspect-ratio:1;border-radius:6px;background:#7986cb;cursor:pointer;border:2px solid transparent;transition:all 0.15s;" onmouseenter="this.style.transform='scale(1.15)'" onmouseleave="this.style.transform=''"></div>
+    </div>
+    <div class="form-row" style="margin-bottom:14px;">
+      <label class="form-label">カスタムカラー</label>
+      <div style="display:flex;gap:8px;align-items:center;">
+        <input type="color" id="color-custom" value="#4a9eff" style="width:44px;height:36px;border:none;background:none;cursor:pointer;padding:0;border-radius:4px;">
+        <button onclick="selectQuestColor(document.getElementById('color-custom').value)" style="padding:7px 14px;background:var(--bg3);border:1px solid var(--border2);border-radius:6px;color:var(--text);cursor:pointer;font-size:12px;font-family:'Noto Sans JP',sans-serif;">適用</button>
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button class="modal-cancel" onclick="document.getElementById('color-modal').style.display='none'">閉じる</button>
+    </div>
+  </div>
+</div>
+
+<!-- Partial Assign Modal -->
+<div class="modal-overlay" id="partial-assign-modal" style="display:none" onclick="closeModal(event,'partial-assign-modal')">
+  <div class="modal" onclick="event.stopPropagation()">
+    <div class="modal-title" id="pa-title">アサイン期間を設定</div>
+    <div id="pa-unit-info" style="display:flex;align-items:center;gap:10px;margin-bottom:16px;padding:10px 12px;background:var(--bg3);border-radius:8px;"></div>
+    <div class="form-row">
+      <label class="form-label">アサイン期間</label>
+      <div style="display:flex;align-items:center;gap:8px;">
+        <input class="form-input" id="pa-start" type="date" style="flex:1;">
+        <span style="color:var(--text2);flex-shrink:0;">〜</span>
+        <input class="form-input" id="pa-end" type="date" style="flex:1;">
+      </div>
+      <div style="margin-top:6px;display:flex;gap:8px;">
+        <button onclick="setFullPeriod()" style="font-size:11px;padding:4px 10px;background:var(--bg3);border:1px solid var(--border2);border-radius:4px;color:var(--text2);cursor:pointer;">全工期</button>
+        <span id="pa-period-note" style="font-size:11px;color:var(--text2);line-height:24px;"></span>
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button class="modal-cancel" onclick="document.getElementById('partial-assign-modal').style.display='none'">キャンセル</button>
+      <button class="modal-submit" onclick="confirmPartialAssign()">アサイン</button>
+    </div>
+  </div>
+</div>
+
+<!-- Quest Detail Side Panel -->
+<div id="quest-detail-panel" style="display:none;position:fixed;top:56px;right:0;width:300px;height:calc(100vh - 56px);background:var(--bg2);border-left:1px solid var(--border2);z-index:150;overflow-y:auto;box-shadow:-4px 0 20px rgba(0,0,0,0.3);">
+  <div style="padding:16px;">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
+      <div style="font-family:'Oswald',sans-serif;font-size:16px;font-weight:600;" id="qdp-title"></div>
+      <button onclick="document.getElementById('quest-detail-panel').style.display='none'" style="background:none;border:none;cursor:pointer;color:var(--text3);font-size:18px;" onmouseenter="this.style.color='var(--text)'" onmouseleave="this.style.color='var(--text3)'">✕</button>
+    </div>
+    <div id="qdp-meta" style="margin-bottom:14px;"></div>
+    <div style="font-size:11px;font-weight:500;color:var(--text2);letter-spacing:0.06em;text-transform:uppercase;margin-bottom:10px;">アサインメンバー</div>
+    <div id="qdp-members"></div>
+    <div style="margin-top:14px;">
+      <button onclick="closeQuestDetailAndGoAssign()" style="width:100%;padding:9px;background:var(--accent);border:none;border-radius:6px;font-size:13px;font-weight:700;color:#1a0e00;cursor:pointer;font-family:'Noto Sans JP',sans-serif;">アサイン画面へ →</button>
+    </div>
+  </div>
+</div>
+
+
+<div id="pw-screen" style="position:fixed;inset:0;background:var(--bg);z-index:999;display:flex;align-items:center;justify-content:center;">
+  <div style="width:340px;text-align:center;">
+    <div style="font-family:'Oswald',sans-serif;font-size:28px;font-weight:600;color:var(--accent);letter-spacing:0.06em;margin-bottom:6px;">現場クエスト</div>
+    <div style="font-size:12px;color:var(--text2);margin-bottom:32px;">Construction Assign System</div>
+    <div style="background:var(--bg2);border:1px solid var(--border2);border-radius:12px;padding:28px 24px;">
+      <div style="font-size:13px;color:var(--text2);margin-bottom:16px;text-align:left;">パスワードを入力してください</div>
+      <input id="pw-input" type="password"
+        style="width:100%;background:var(--bg3);border:1px solid var(--border2);border-radius:6px;padding:10px 12px;font-size:15px;color:var(--text);font-family:'Noto Sans JP',sans-serif;outline:none;margin-bottom:8px;box-sizing:border-box;letter-spacing:0.1em;"
+        placeholder="••••••••••"
+        onkeydown="if(event.key==='Enter')checkPassword()">
+      <div id="pw-error" style="font-size:11px;color:var(--red);min-height:16px;margin-bottom:10px;text-align:left;"></div>
+      <button onclick="checkPassword()"
+        style="width:100%;padding:11px;background:var(--accent);border:none;border-radius:6px;font-size:14px;font-weight:700;color:#1a0e00;cursor:pointer;font-family:'Noto Sans JP',sans-serif;transition:opacity 0.15s;"
+        onmouseenter="this.style.opacity='.85'" onmouseleave="this.style.opacity='1'">
+        ログイン
+      </button>
+    </div>
+  </div>
+</div>
+
+<div id="main-app" style="display:none;">
 <header>
   <div class="logo">現場クエスト <span>Construction Assign System</span></div>
   <div class="nav-tabs">
     <button class="nav-tab active" id="nav-assign" onclick="switchView('assign')">アサイン</button>
     <button class="nav-tab" id="nav-calendar" onclick="switchView('calendar')">カレンダー</button>
+    <button class="nav-tab" id="nav-status" onclick="switchView('status')">📊 人材Status</button>
     <button class="nav-tab" onclick="showToast('レポート機能は開発中です','info')">レポート</button>
   </div>
   <div class="header-stats">
@@ -613,7 +791,7 @@ header {
       <div class="quest-detail-title" id="detail-title"></div>
       <div class="quest-detail-meta" id="detail-meta"></div>
       <div class="assign-actions">
-        <button class="action-btn primary" onclick="autoAssign()">⚡ 自動アサイン</button>
+        <button class="action-btn primary" onclick="openAutoAssignModal()">⚡ 自動アサイン</button>
         <button class="action-btn" onclick="clearAssign()">クリア</button>
       </div>
     </div>
@@ -635,6 +813,17 @@ header {
     <div class="roster-search">
       <input class="search-input" type="text" placeholder="名前・資格で検索…" oninput="filterRoster(this.value)" id="search-input">
     </div>
+    <div style="padding:6px 8px;display:flex;gap:4px;flex-wrap:wrap;border-bottom:1px solid var(--border);">
+      <button class="roster-sort-btn active" id="sort-btn-rarity" onclick="setRosterSort('rarity',this)" style="font-size:10px;padding:3px 8px;border-radius:4px;background:var(--accent);color:#1a0e00;border:none;cursor:pointer;font-weight:700;">レアリティ</button>
+      <button class="roster-sort-btn" id="sort-btn-name" onclick="setRosterSort('name',this)" style="font-size:10px;padding:3px 8px;border-radius:4px;background:var(--bg3);color:var(--text2);border:1px solid var(--border);cursor:pointer;">名前</button>
+      <button class="roster-sort-btn" id="sort-btn-free" onclick="setRosterSort('free',this)" style="font-size:10px;padding:3px 8px;border-radius:4px;background:var(--bg3);color:var(--text2);border:1px solid var(--border);cursor:pointer;">空き優先</button>
+      <button class="roster-sort-btn" id="sort-btn-tenure" onclick="setRosterSort('tenure',this)" style="font-size:10px;padding:3px 8px;border-radius:4px;background:var(--bg3);color:var(--text2);border:1px solid var(--border);cursor:pointer;">勤続</button>
+    </div>
+    <div id="roster-color-legend" style="padding:5px 10px;background:var(--bg3);border-bottom:1px solid var(--border);font-size:10px;color:var(--text2);display:none;gap:10px;">
+      <span style="color:var(--blue);">● 空き</span>
+      <span style="color:var(--red);">● 工期重複</span>
+      <span style="color:var(--accent);">● アサイン済み</span>
+    </div>
     <div class="roster-list" id="roster-list"></div>
   </div>
 </div>
@@ -652,10 +841,12 @@ header {
       <div class="cal-filter-chip" id="filter-free" onclick="setFilter('free',this)">空き人材</div>
     </div>
     <div class="cal-legend" style="margin-left:auto;">
-      <div class="legend-item"><div class="legend-dot" style="background:var(--rarity2)"></div>EASY</div>
-      <div class="legend-item"><div class="legend-dot" style="background:var(--blue)"></div>HARD</div>
-      <div class="legend-item"><div class="legend-dot" style="background:var(--purple)"></div>EXPERT</div>
-      <div class="legend-item"><div class="legend-dot" style="background:var(--rarity5)"></div>LEGEND</div>
+      <div class="legend-item"><div class="legend-dot" style="background:var(--rarity1)"></div>EASY</div>
+      <div class="legend-item"><div class="legend-dot" style="background:var(--rarity2)"></div>NORMAL</div>
+      <div class="legend-item"><div class="legend-dot" style="background:var(--blue)"></div>RARE</div>
+      <div class="legend-item"><div class="legend-dot" style="background:var(--purple)"></div>HARD</div>
+      <div class="legend-item"><div class="legend-dot" style="background:var(--rarity5)"></div>EXPERT</div>
+      <div class="legend-item"><div class="legend-dot" style="background:var(--red)"></div>LEGEND</div>
       <div class="legend-item"><div class="legend-dot" style="background:var(--red);outline:1.5px solid var(--red);outline-offset:1px;"></div>重複</div>
     </div>
   </div>
@@ -663,6 +854,107 @@ header {
     <div id="gantt-inner"></div>
   </div>
   <div class="cal-summary" id="cal-summary"></div>
+</div>
+
+<!-- ═══ STATUS VIEW ═══ -->
+<div id="status-view" style="display:none;flex-direction:column;width:100%;height:calc(100vh - 56px);background:var(--bg);overflow:hidden;">
+  <!-- toolbar -->
+  <div style="display:flex;align-items:center;gap:12px;padding:12px 20px;background:var(--bg2);border-bottom:1px solid var(--border);flex-shrink:0;">
+    <div style="font-family:'Oswald',sans-serif;font-size:18px;font-weight:600;color:var(--text);">📊 人材Status</div>
+    <div style="margin-left:auto;display:flex;gap:8px;align-items:center;">
+      <input type="text" id="status-search" placeholder="名前で絞り込み…" oninput="renderStatusView()" style="background:var(--bg3);border:1px solid var(--border);border-radius:6px;padding:6px 10px;font-size:12px;color:var(--text);font-family:'Noto Sans JP',sans-serif;outline:none;width:160px;">
+      <select id="status-sort" onchange="renderStatusView()" style="background:var(--bg3);border:1px solid var(--border);border-radius:6px;padding:6px 10px;font-size:12px;color:var(--text);font-family:'Noto Sans JP',sans-serif;outline:none;">
+        <option value="level">総合Lv順</option>
+        <option value="xp">総EXP順</option>
+        <option value="name">名前順</option>
+        <option value="rarity">レアリティ順</option>
+      </select>
+    </div>
+  </div>
+  <!-- body: unit list (left) + detail panel (right) -->
+  <div style="display:flex;flex:1;overflow:hidden;">
+    <!-- unit list -->
+    <div id="status-unit-list" style="width:260px;flex-shrink:0;overflow-y:auto;border-right:1px solid var(--border);background:var(--bg2);padding:8px;"></div>
+    <!-- detail panel -->
+    <div id="status-detail" style="flex:1;overflow-y:auto;padding:20px 24px;">
+      <div style="display:flex;align-items:center;justify-content:center;height:100%;flex-direction:column;gap:12px;color:var(--text3);">
+        <div style="font-size:48px;opacity:0.3;">📊</div>
+        <div style="font-size:14px;">左から人材を選択してください</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Auto Assign Modal -->
+<div class="modal-overlay" id="auto-assign-modal" style="display:none" onclick="closeModal(event,'auto-assign-modal')">
+  <div class="modal" style="width:480px;max-width:95vw;" onclick="event.stopPropagation()">
+    <div class="modal-title">⚡ 自動アサイン条件設定</div>
+    <div id="aa-quest-info" style="padding:8px 12px;background:var(--bg3);border-radius:6px;margin-bottom:16px;font-size:12px;color:var(--text2);"></div>
+
+    <!-- 人数 -->
+    <div class="form-row">
+      <label class="form-label">アサイン人数</label>
+      <div style="display:flex;align-items:center;gap:10px;">
+        <input class="form-input" id="aa-count" type="number" min="1" max="15" value="4" style="width:70px;">
+        <button onclick="setRecommendedCount()" style="font-size:11px;padding:4px 10px;background:var(--bg3);border:1px solid var(--border2);border-radius:4px;color:var(--text2);cursor:pointer;">推奨数に設定</button>
+        <span id="aa-count-hint" style="font-size:11px;color:var(--text2);"></span>
+      </div>
+    </div>
+
+    <!-- 優先条件 -->
+    <div class="form-row">
+      <label class="form-label">優先条件（複数選択可）</label>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+        <label class="aa-check-label" style="display:flex;align-items:center;gap:8px;padding:8px 10px;background:var(--bg3);border:1px solid var(--border);border-radius:6px;cursor:pointer;font-size:12px;">
+          <input type="checkbox" id="aa-prio-free" checked> 空き優先（重複なし）
+        </label>
+        <label class="aa-check-label" style="display:flex;align-items:center;gap:8px;padding:8px 10px;background:var(--bg3);border:1px solid var(--border);border-radius:6px;cursor:pointer;font-size:12px;">
+          <input type="checkbox" id="aa-prio-skill" checked> 資格マッチ優先
+        </label>
+        <label class="aa-check-label" style="display:flex;align-items:center;gap:8px;padding:8px 10px;background:var(--bg3);border:1px solid var(--border);border-radius:6px;cursor:pointer;font-size:12px;">
+          <input type="checkbox" id="aa-prio-rarity" checked> レアリティ優先
+        </label>
+        <label class="aa-check-label" style="display:flex;align-items:center;gap:8px;padding:8px 10px;background:var(--bg3);border:1px solid var(--border);border-radius:6px;cursor:pointer;font-size:12px;">
+          <input type="checkbox" id="aa-prio-affinity"> 相性ボーナス優先
+        </label>
+        <label class="aa-check-label" style="display:flex;align-items:center;gap:8px;padding:8px 10px;background:var(--bg3);border:1px solid var(--border);border-radius:6px;cursor:pointer;font-size:12px;">
+          <input type="checkbox" id="aa-prio-distance"> 居住地の近さ優先
+        </label>
+        <label class="aa-check-label" style="display:flex;align-items:center;gap:8px;padding:8px 10px;background:var(--bg3);border:1px solid var(--border);border-radius:6px;cursor:pointer;font-size:12px;">
+          <input type="checkbox" id="aa-prio-tenure"> 勤続年数優先
+        </label>
+      </div>
+    </div>
+
+    <!-- 重複許可 -->
+    <div class="form-row">
+      <label class="form-label">スケジュール重複</label>
+      <div style="display:flex;gap:8px;">
+        <label style="display:flex;align-items:center;gap:6px;padding:7px 12px;background:var(--bg3);border:1px solid var(--border);border-radius:6px;cursor:pointer;font-size:12px;flex:1;">
+          <input type="radio" name="aa-conflict" id="aa-conflict-no" value="no" checked> 重複なしのみ
+        </label>
+        <label style="display:flex;align-items:center;gap:6px;padding:7px 12px;background:var(--bg3);border:1px solid var(--border);border-radius:6px;cursor:pointer;font-size:12px;flex:1;">
+          <input type="radio" name="aa-conflict" id="aa-conflict-warn" value="warn"> 重複ありも候補に（警告付き）
+        </label>
+      </div>
+    </div>
+
+    <!-- 相性NGを除外 -->
+    <div class="form-row">
+      <label style="display:flex;align-items:center;gap:8px;padding:8px 10px;background:var(--bg3);border:1px solid var(--border);border-radius:6px;cursor:pointer;font-size:12px;">
+        <input type="checkbox" id="aa-exclude-bad" checked> 相性「悪い」「同レアリティNG」のペアを除外
+      </label>
+    </div>
+
+    <!-- スコアプレビュー -->
+    <div id="aa-preview" style="margin-top:4px;"></div>
+
+    <div class="modal-actions">
+      <button class="modal-cancel" onclick="document.getElementById('auto-assign-modal').style.display='none'">キャンセル</button>
+      <button onclick="previewAutoAssign()" style="padding:8px 16px;border-radius:6px;background:var(--bg3);border:1px solid var(--border2);color:var(--text);cursor:pointer;font-family:'Noto Sans JP',sans-serif;font-size:13px;">プレビュー</button>
+      <button class="modal-submit" onclick="confirmAutoAssign()">⚡ アサイン実行</button>
+    </div>
+  </div>
 </div>
 
 <!-- Affinity Modal -->
@@ -734,6 +1026,25 @@ header {
       <label class="form-label">必要資格（カンマ区切り）</label>
       <input class="form-input" id="q-skills" placeholder="例: 1級管工事施工管理技士, 給水装置工事主任技術者">
     </div>
+    <div class="form-row">
+      <label class="form-label">現場住所（都道府県・市区町村）</label>
+      <input class="form-input" id="q-address" placeholder="例: 東京都新宿区">
+    </div>
+    <div class="form-row">
+      <label class="form-label">物件種別</label>
+      <select class="form-select" id="q-category">
+        <option value="factory">🏭 工場</option>
+        <option value="warehouse">📦 倉庫</option>
+        <option value="hospital">🏥 病院</option>
+        <option value="elderly">🏠 老人ホーム</option>
+        <option value="government">🏛️ 役所</option>
+        <option value="school">🏫 学校</option>
+        <option value="shop">🏪 店舗</option>
+        <option value="office">🏢 事務所</option>
+        <option value="hotel">🏨 ホテル</option>
+        <option value="other">📋 その他</option>
+      </select>
+    </div>
     <div class="modal-actions">
       <button class="modal-cancel" onclick="document.getElementById('quest-modal').style.display='none'">キャンセル</button>
       <button class="modal-submit" id="q-submit-btn" onclick="saveQuest()">追加</button>
@@ -767,8 +1078,84 @@ header {
       <div id="u-tenure-preview" style="font-size:11px;color:var(--text2);margin-top:4px;"></div>
     </div>
     <div class="form-row">
-      <label class="form-label">保有資格（カンマ区切り）</label>
-      <input class="form-input" id="u-skills" placeholder="例: 1級管工事施工管理技士, 給水装置工事主任技術者">
+      <label class="form-label">居住地（都道府県・市区町村）</label>
+      <input class="form-input" id="u-address" placeholder="例: 群馬県前橋市">
+    </div>
+    <div class="form-row">
+      <label style="display:flex;align-items:center;gap:8px;padding:8px 12px;background:var(--bg3);border:1px solid var(--border);border-radius:6px;cursor:pointer;font-size:13px;">
+        <input type="checkbox" id="u-can-draw" style="width:16px;height:16px;">
+        <span>📐 図面作成可能</span>
+      </label>
+    </div>
+    <div class="form-row">
+      <label class="form-label">保有資格</label>
+      <!-- 選択済みタグ表示 -->
+      <div id="skill-selected-tags" style="display:flex;flex-wrap:wrap;gap:5px;min-height:28px;margin-bottom:8px;padding:6px 8px;background:var(--bg3);border:1px solid var(--border);border-radius:6px;">
+        <span id="skill-tags-placeholder" style="font-size:11px;color:var(--text3);line-height:22px;">資格をタップして追加…</span>
+      </div>
+      <!-- カテゴリタブ -->
+      <div style="display:flex;gap:4px;margin-bottom:8px;flex-wrap:wrap;" id="skill-tab-row">
+        <button class="skill-tab-btn active" onclick="switchSkillTab('kanko',this)">管工事</button>
+        <button class="skill-tab-btn" onclick="switchSkillTab('gas',this)">ガス・熱</button>
+        <button class="skill-tab-btn" onclick="switchSkillTab('fire',this)">消防設備</button>
+        <button class="skill-tab-btn" onclick="switchSkillTab('electric',this)">電気</button>
+        <button class="skill-tab-btn" onclick="switchSkillTab('other',this)">その他</button>
+        <button class="skill-tab-btn" onclick="switchSkillTab('free',this)">自由記述</button>
+      </div>
+      <!-- 管工事 -->
+      <div id="skill-tab-kanko" class="skill-check-grid">
+        <div class="skill-pick-item" onclick="toggleSkill('1級管工事施工管理技士',this)">1級管工事施工管理技士</div>
+        <div class="skill-pick-item" onclick="toggleSkill('2級管工事施工管理技士',this)">2級管工事施工管理技士</div>
+        <div class="skill-pick-item" onclick="toggleSkill('管工事施工管理技士補',this)">管工事施工管理技士補</div>
+        <div class="skill-pick-item" onclick="toggleSkill('給水装置工事主任技術者',this)">給水装置工事主任技術者</div>
+        <div class="skill-pick-item" onclick="toggleSkill('排水設備工事責任技術者',this)">排水設備工事責任技術者</div>
+        <div class="skill-pick-item" onclick="toggleSkill('浄化槽設備士',this)">浄化槽設備士</div>
+      </div>
+      <!-- ガス・熱 -->
+      <div id="skill-tab-gas" class="skill-check-grid" style="display:none">
+        <div class="skill-pick-item" onclick="toggleSkill('ガス主任技術者（甲種）',this)">ガス主任技術者（甲種）</div>
+        <div class="skill-pick-item" onclick="toggleSkill('ガス主任技術者（乙種）',this)">ガス主任技術者（乙種）</div>
+        <div class="skill-pick-item" onclick="toggleSkill('ガス主任技術者（丙種）',this)">ガス主任技術者（丙種）</div>
+        <div class="skill-pick-item" onclick="toggleSkill('冷凍機械責任者（1種）',this)">冷凍機械責任者（1種）</div>
+        <div class="skill-pick-item" onclick="toggleSkill('冷凍機械責任者（2種）',this)">冷凍機械責任者（2種）</div>
+        <div class="skill-pick-item" onclick="toggleSkill('冷凍機械責任者（3種）',this)">冷凍機械責任者（3種）</div>
+        <div class="skill-pick-item" onclick="toggleSkill('液化石油ガス設備士',this)">液化石油ガス設備士</div>
+      </div>
+      <!-- 消防設備 -->
+      <div id="skill-tab-fire" class="skill-check-grid" style="display:none">
+        <div class="skill-pick-item" onclick="toggleSkill('消防設備士（甲1類）',this)">消防設備士（甲1類）</div>
+        <div class="skill-pick-item" onclick="toggleSkill('消防設備士（甲2類）',this)">消防設備士（甲2類）</div>
+        <div class="skill-pick-item" onclick="toggleSkill('消防設備士（甲3類）',this)">消防設備士（甲3類）</div>
+        <div class="skill-pick-item" onclick="toggleSkill('消防設備士（甲4類）',this)">消防設備士（甲4類）</div>
+        <div class="skill-pick-item" onclick="toggleSkill('消防設備士（甲5類）',this)">消防設備士（甲5類）</div>
+        <div class="skill-pick-item" onclick="toggleSkill('消防設備士（乙6類）',this)">消防設備士（乙6類）</div>
+        <div class="skill-pick-item" onclick="toggleSkill('消防設備士（乙7類）',this)">消防設備士（乙7類）</div>
+      </div>
+      <!-- 電気 -->
+      <div id="skill-tab-electric" class="skill-check-grid" style="display:none">
+        <div class="skill-pick-item" onclick="toggleSkill('第一種電気工事士',this)">第一種電気工事士</div>
+        <div class="skill-pick-item" onclick="toggleSkill('第二種電気工事士',this)">第二種電気工事士</div>
+        <div class="skill-pick-item" onclick="toggleSkill('電気主任技術者（1種）',this)">電気主任技術者（1種）</div>
+        <div class="skill-pick-item" onclick="toggleSkill('電気主任技術者（2種）',this)">電気主任技術者（2種）</div>
+        <div class="skill-pick-item" onclick="toggleSkill('電気主任技術者（3種）',this)">電気主任技術者（3種）</div>
+      </div>
+      <!-- その他 -->
+      <div id="skill-tab-other" class="skill-check-grid" style="display:none">
+        <div class="skill-pick-item" onclick="toggleSkill('玉掛技能講習',this)">玉掛技能講習</div>
+        <div class="skill-pick-item" onclick="toggleSkill('高所作業車運転技能',this)">高所作業車運転技能</div>
+        <div class="skill-pick-item" onclick="toggleSkill('クレーン運転士',this)">クレーン運転士</div>
+        <div class="skill-pick-item" onclick="toggleSkill('足場作業主任者',this)">足場作業主任者</div>
+        <div class="skill-pick-item" onclick="toggleSkill('酸素欠乏危険作業主任者',this)">酸素欠乏危険作業主任者</div>
+        <div class="skill-pick-item" onclick="toggleSkill('有機溶剤作業主任者',this)">有機溶剤作業主任者</div>
+      </div>
+      <!-- 自由記述 -->
+      <div id="skill-tab-free" style="display:none">
+        <div style="display:flex;gap:6px;">
+          <input class="form-input" id="u-skills-free-input" placeholder="例: 特殊資格A" style="flex:1;">
+          <button onclick="addFreeSkill()" style="padding:8px 12px;background:var(--accent);border:none;border-radius:6px;color:#1a0e00;font-weight:700;cursor:pointer;font-size:12px;font-family:'Noto Sans JP',sans-serif;white-space:nowrap;">追加</button>
+        </div>
+        <div style="font-size:10px;color:var(--text3);margin-top:4px;">Enterキーでも追加できます</div>
+      </div>
     </div>
     <div class="form-row form-row-2">
       <div>
@@ -824,12 +1211,224 @@ function evalRelation(rel, ua, ub) {
   return rel;
 }
 const DIFF_LEVELS = [
-  { max: 5000000,    level: 1, label: 'EASY',    color: 'var(--rarity1)' },
-  { max: 15000000,   level: 2, label: 'NORMAL',  color: 'var(--rarity2)' },
-  { max: 50000000,   level: 3, label: 'HARD',    color: 'var(--blue)' },
-  { max: 150000000,  level: 4, label: 'EXPERT',  color: 'var(--purple)' },
-  { max: Infinity,   level: 5, label: 'LEGEND',  color: 'var(--rarity5)' },
+  { max: 1000000,    level: 1, label: 'EASY',    color: 'var(--rarity1)' },
+  { max: 10000000,   level: 2, label: 'NORMAL',  color: 'var(--rarity2)' },
+  { max: 100000000,  level: 3, label: 'RARE',    color: 'var(--blue)' },
+  { max: 500000000,  level: 4, label: 'HARD',    color: 'var(--purple)' },
+  { max: 1000000000, level: 5, label: 'EXPERT',  color: 'var(--rarity5)' },
+  { max: Infinity,   level: 6, label: 'LEGEND',  color: 'var(--red)' },
 ];
+
+// ── EXP / LEVEL SYSTEM ──
+const RANK_EXP = { 1: 50, 2: 120, 3: 300, 4: 700, 5: 1500, 6: 5000 };
+
+const CATEGORIES = {
+  factory:    { label: '工場',       icon: '🏭' },
+  warehouse:  { label: '倉庫',       icon: '📦' },
+  hospital:   { label: '病院',       icon: '🏥' },
+  elderly:    { label: '老人ホーム', icon: '🏠' },
+  government: { label: '役所',       icon: '🏛️' },
+  school:     { label: '学校',       icon: '🏫' },
+  shop:       { label: '店舗',       icon: '🏪' },
+  office:     { label: '事務所',     icon: '🏢' },
+  hotel:      { label: 'ホテル',     icon: '🏨' },
+  other:      { label: 'その他',     icon: '📋' },
+};
+const CAT_KEYS = Object.keys(CATEGORIES);
+
+// ── EXP / LEVEL SYSTEM (MAX Lv.30) ──
+const MAX_CAT_LEVEL = 30;
+
+// EXP required to reach level N (from 0).
+// Formula: 100 * N^2.2  → grows roughly exponentially.
+// Lv1=100, Lv5=2,850, Lv10=15,800, Lv20=75,000, Lv30=191,000 (cumulative)
+function expToReachLevel(lv) {
+  if (lv <= 0) return 0;
+  return Math.floor(100 * Math.pow(lv, 2.2));
+}
+// Total cumulative EXP needed to be AT level N
+function totalExpForLevel(lv) {
+  let total = 0;
+  for (let i = 1; i <= lv; i++) total += expToReachLevel(i);
+  return total;
+}
+// Quest count required to be AT level N
+function questsForLevel(lv) {
+  return Math.ceil(lv * 1.5); // Lv1=2, Lv10=15, Lv30=45
+}
+
+function calcCatLevel(exp, questCount) {
+  let lv = 0;
+  while (lv < MAX_CAT_LEVEL) {
+    const nextLv = lv + 1;
+    if (exp >= totalExpForLevel(nextLv) && questCount >= questsForLevel(nextLv)) {
+      lv = nextLv;
+    } else break;
+  }
+  return lv;
+}
+
+// EXP progress within current level (0~1 ratio for progress bar)
+function catLevelProgress(exp, questCount) {
+  const lv = calcCatLevel(exp, questCount);
+  if (lv >= MAX_CAT_LEVEL) return 1;
+  const base = totalExpForLevel(lv);
+  const next = totalExpForLevel(lv + 1);
+  return Math.min(1, (exp - base) / (next - base));
+}
+
+// migrate/initialize xp fields on unit
+function normalizeUnit(u) {
+  if (!u.xp) u.xp = {};
+  CAT_KEYS.forEach(k => { if (!u.xp[k]) u.xp[k] = { exp: 0, quests: 0 }; });
+  if (u.totalXp === undefined) {
+    u.totalXp = Object.values(u.xp).reduce((s, v) => s + v.exp, 0);
+  }
+  return u;
+}
+
+// Compute per-category level for a unit
+function getUnitCatLevels(u) {
+  normalizeUnit(u);
+  const levels = {};
+  CAT_KEYS.forEach(k => {
+    levels[k] = calcCatLevel(u.xp[k].exp, u.xp[k].quests);
+  });
+  return levels;
+}
+
+// Total unit level = sum of all category levels / 2 (rounded)
+function getUnitTotalLevel(u) {
+  const levels = getUnitCatLevels(u);
+  return Math.max(1, Math.round(Object.values(levels).reduce((s,v) => s + v, 0) / 2));
+}
+
+// Grant EXP to all assigned units when quest "completed" (called manually)
+function grantQuestXp(qid) {
+  const q = quests.find(x => x.id === qid);
+  if (!q) return;
+  const diff = getDifficulty(q.amount);
+  const exp = RANK_EXP[diff.level] || 50;
+  const cat = q.category || 'other';
+  normalizeAssigned(q);
+  let names = [];
+  let lvUpNames = [];
+  getAssignedUids(q).forEach(uid => {
+    const u = units.find(x => x.id === uid);
+    if (!u) return;
+    normalizeUnit(u);
+    const lvBefore = calcCatLevel(u.xp[cat].exp, u.xp[cat].quests);
+    u.xp[cat].exp += exp;
+    u.xp[cat].quests++;
+    // ── Fix: ensure quest count satisfies next level threshold ──
+    const neededQ = questsForLevel(calcCatLevel(u.xp[cat].exp, u.xp[cat].quests) + 1);
+    if (u.xp[cat].quests < neededQ) u.xp[cat].quests = neededQ;
+    const lvAfter = calcCatLevel(u.xp[cat].exp, u.xp[cat].quests);
+    u.totalXp = Object.values(u.xp).reduce((s, v) => s + v.exp, 0);
+    names.push(u.name);
+    if (lvAfter > lvBefore) lvUpNames.push(`${u.name}(${CATEGORIES[cat]?.label||cat} Lv.${lvAfter})`);
+  });
+  saveData();
+  render();
+  // If currently viewing status, refresh it too
+  if (currentView === 'status') renderStatusView();
+  const lvMsg = lvUpNames.length ? `　🎉 LvUP: ${lvUpNames.join('・')}` : '';
+  showToast(`✨ ${names.join('・')} に ${exp.toLocaleString()} EXP付与！${lvMsg}`, lvUpNames.length ? 'success' : 'info');
+}
+
+// Adjust XP manually (admin) — supports ±any delta
+function adminAdjustXp(uid, cat, delta) {
+  const u = units.find(x => x.id === uid);
+  if (!u) return;
+  normalizeUnit(u);
+  u.xp[cat].exp = Math.max(0, u.xp[cat].exp + delta);
+  // Auto-increment quest count when adding XP to keep level reachable
+  if (delta > 0) {
+    const neededQ = questsForLevel(calcCatLevel(u.xp[cat].exp, u.xp[cat].quests) + 1);
+    if (u.xp[cat].quests < neededQ) u.xp[cat].quests = neededQ;
+  }
+  u.totalXp = Object.values(u.xp).reduce((s, v) => s + v.exp, 0);
+  saveData(); openStatusDetail(uid);
+}
+
+// Set XP directly from input field
+function setXpDirect(uid, cat, inputEl) {
+  const val = parseInt(inputEl.value);
+  if (isNaN(val) || val < 0) { inputEl.value = ''; return; }
+  const u = units.find(x => x.id === uid);
+  if (!u) return;
+  normalizeUnit(u);
+  const delta = val - u.xp[cat].exp;
+  u.xp[cat].exp = val;
+  if (delta > 0) {
+    const neededQ = questsForLevel(calcCatLevel(val, u.xp[cat].quests) + 1);
+    if (u.xp[cat].quests < neededQ) u.xp[cat].quests = neededQ;
+  }
+  u.totalXp = Object.values(u.xp).reduce((s, v) => s + v.exp, 0);
+  saveData(); openStatusDetail(uid);
+}
+
+// Get specialty badge for unit (highest level cat)
+function getSpecialtyBadge(u) {
+  const levels = getUnitCatLevels(u);
+  const top = CAT_KEYS.reduce((a, b) => levels[a] >= levels[b] ? a : b);
+  const lv = levels[top];
+  if (lv < 3) return null;
+  const cat = CATEGORIES[top];
+  const rank = lv >= 25 ? '神域' : lv >= 20 ? 'マスター' : lv >= 15 ? 'エキスパート' : lv >= 10 ? '上級' : lv >= 5 ? '中級' : lv >= 3 ? '経験者' : '';
+  if (!rank) return null;
+  return { label: `${cat.icon}${cat.label}${rank}`, lv, cat: top };
+}
+
+// Compute ALL earned badges/titles for a unit
+function getAllBadges(u) {
+  normalizeUnit(u);
+  const levels = getUnitCatLevels(u);
+  const badges = [];
+  const totalLv = getUnitTotalLevel(u);
+  const pastQs = getUnitPastQuests(u.id);
+
+  // Per-category mastery badges
+  CAT_KEYS.forEach(k => {
+    const lv = levels[k];
+    const cat = CATEGORIES[k];
+    if (lv >= 25) badges.push({ icon: '🏆', label: `${cat.label}神域`, color: 'var(--rarity5)', desc: `${cat.label}Lv.${lv}到達` });
+    else if (lv >= 20) badges.push({ icon: '🥇', label: `${cat.label}マスター`, color: 'var(--purple)', desc: `${cat.label}Lv.${lv}到達` });
+    else if (lv >= 15) badges.push({ icon: '⭐', label: `${cat.label}エキスパート`, color: 'var(--blue)', desc: `${cat.label}Lv.${lv}到達` });
+    else if (lv >= 10) badges.push({ icon: '✨', label: `${cat.label}上級`, color: 'var(--green)', desc: `${cat.label}Lv.${lv}到達` });
+    else if (lv >= 5)  badges.push({ icon: '🔷', label: `${cat.label}中級`, color: 'var(--blue)', desc: `${cat.label}Lv.${lv}到達` });
+    else if (lv >= 3)  badges.push({ icon: '🔹', label: `${cat.label}経験者`, color: 'var(--text2)', desc: `${cat.label}Lv.${lv}到達` });
+  });
+
+  // Total level milestones
+  if (totalLv >= 30) badges.push({ icon: '👑', label: '現場の帝王', color: 'var(--rarity5)', desc: '総合Lv.30達成' });
+  else if (totalLv >= 20) badges.push({ icon: '🌟', label: 'ベテラン職人', color: 'var(--purple)', desc: '総合Lv.20達成' });
+  else if (totalLv >= 10) badges.push({ icon: '🔥', label: 'ベテラン', color: 'var(--accent)', desc: '総合Lv.10達成' });
+  else if (totalLv >= 5)  badges.push({ icon: '⚡', label: '一人前', color: 'var(--green)', desc: '総合Lv.5達成' });
+
+  // Quest count badges
+  if (pastQs.length >= 50) badges.push({ icon: '📚', label: '現場百戦', color: 'var(--rarity5)', desc: '50案件以上完了' });
+  else if (pastQs.length >= 20) badges.push({ icon: '📋', label: '現場熟練', color: 'var(--purple)', desc: '20案件以上完了' });
+  else if (pastQs.length >= 10) badges.push({ icon: '📌', label: '現場経験者', color: 'var(--blue)', desc: '10案件以上完了' });
+  else if (pastQs.length >= 5)  badges.push({ icon: '📍', label: '現場デビュー', color: 'var(--green)', desc: '5案件以上完了' });
+
+  // Skills badge
+  if (u.skills && u.skills.length >= 5) badges.push({ icon: '🎓', label: 'マルチスキル', color: 'var(--blue)', desc: '資格5種以上保有' });
+  if (u.canDraw) badges.push({ icon: '📐', label: '図面作成可', color: 'var(--green)', desc: '図面作成スキル保有' });
+
+  // Total XP badges
+  const txp = u.totalXp || 0;
+  if (txp >= 100000) badges.push({ icon: '💎', label: 'EXP10万突破', color: 'var(--rarity5)', desc: '累計100,000EXP達成' });
+  else if (txp >= 50000) badges.push({ icon: '💠', label: 'EXP5万突破', color: 'var(--purple)', desc: '累計50,000EXP達成' });
+  else if (txp >= 10000) badges.push({ icon: '🔮', label: 'EXP1万突破', color: 'var(--blue)', desc: '累計10,000EXP達成' });
+
+  return badges;
+}
+
+// Required level for quest difficulty
+function getRecommendedLevel(diff) {
+  return [0, 1, 2, 5, 10, 20, 40][diff.level] || 1;
+}
 
 let quests = [], units = [], selectedQuestId = null;
 
@@ -837,26 +1436,27 @@ function getDifficulty(amountMan) {
   return DIFF_LEVELS.find(d => amountMan <= d.max) || DIFF_LEVELS[4];
 }
 function getRequiredHeadcount(diff) {
-  return [0, 2, 3, 4, 6, 8][diff.level];
+  return [0, 1, 2, 3, 5, 7, 10][diff.level]; // 推奨人数
 }
+const MAX_SLOTS = 15; // 実際の最大スロット数
 
 // ── INIT DATA ──
 function initSampleData() {
   quests = [
-    { id: 'q1', name: '新宿ビル 給排水設備工事', start: '2024-06-01', end: '2024-08-31', amount: 45000000, skills: ['1級管工事施工管理技士', '給水装置工事主任技術者'], assignedIds: [] },
-    { id: 'q2', name: '品川マンション 空調設備新設', start: '2024-07-15', end: '2024-11-30', amount: 120000000, skills: ['1級管工事施工管理技士', '冷凍機械責任者'], assignedIds: [] },
-    { id: 'q3', name: '渋谷商業施設 ガス配管改修', start: '2024-06-10', end: '2024-07-20', amount: 8000000, skills: ['ガス主任技術者'], assignedIds: [] },
-    { id: 'q4', name: '横浜工場 排水処理設備', start: '2024-08-01', end: '2024-09-30', amount: 22000000, skills: ['排水設備工事責任技術者', '2級管工事施工管理技士'], assignedIds: [] },
+    { id: 'q1', name: '新宿ビル 給排水設備工事', start: '2026-05-01', end: '2026-07-31', amount: 45000000, category: 'office', skills: ['1級管工事施工管理技士', '給水装置工事主任技術者'], assignedIds: [] },
+    { id: 'q2', name: '品川マンション 空調設備新設', start: '2026-06-15', end: '2026-10-31', amount: 120000000, category: 'hotel', skills: ['1級管工事施工管理技士', '冷凍機械責任者'], assignedIds: [] },
+    { id: 'q3', name: '渋谷商業施設 ガス配管改修', start: '2026-05-10', end: '2026-06-20', amount: 8000000, category: 'shop', skills: ['ガス主任技術者'], assignedIds: [] },
+    { id: 'q4', name: '横浜工場 排水処理設備', start: '2026-07-01', end: '2026-08-31', amount: 22000000, category: 'factory', skills: ['排水設備工事責任技術者', '2級管工事施工管理技士'], assignedIds: [] },
   ];
   units = [
-    { id: 'u1', name: '田中 剛', rarity: 5, affinity: 'fire', skills: ['1級管工事施工管理技士', '給水装置工事主任技術者', 'ガス主任技術者'], avatar: '🦺' },
-    { id: 'u2', name: '鈴木 誠一', rarity: 4, affinity: 'water', skills: ['1級管工事施工管理技士', '冷凍機械責任者'], avatar: '👷' },
-    { id: 'u3', name: '佐藤 理恵', rarity: 3, affinity: 'wind', skills: ['2級管工事施工管理技士', '排水設備工事責任技術者'], avatar: '🔧' },
-    { id: 'u4', name: '山田 浩二', rarity: 3, affinity: 'earth', skills: ['給水装置工事主任技術者', '消防設備士（甲4類）'], avatar: '🪛' },
-    { id: 'u5', name: '伊藤 美咲', rarity: 4, affinity: 'water', skills: ['ガス主任技術者', '冷凍機械責任者'], avatar: '🔩' },
-    { id: 'u6', name: '渡辺 大樹', rarity: 2, affinity: 'earth', skills: ['2級管工事施工管理技士', '排水設備工事責任技術者'], avatar: '🔨' },
-    { id: 'u7', name: '中村 健', rarity: 3, affinity: 'fire', skills: ['給水装置工事主任技術者', '管工事施工管理技士補'], avatar: '🏗️' },
-    { id: 'u8', name: '小林 奈々', rarity: 2, affinity: 'wind', skills: ['消防設備士（甲4類）', '2級管工事施工管理技士'], avatar: '🧱' },
+    { id: 'u1', name: '田中 剛',   rarity: 5, affinity: 'fire',  skills: ['1級管工事施工管理技士', '給水装置工事主任技術者', 'ガス主任技術者'], avatar: '🦺', xp: { factory:{exp:1500,quests:8}, hospital:{exp:2200,quests:10}, office:{exp:900,quests:6}, hotel:{exp:400,quests:3}, warehouse:{exp:0,quests:0}, elderly:{exp:600,quests:5}, government:{exp:200,quests:2}, school:{exp:0,quests:0}, shop:{exp:100,quests:2}, other:{exp:0,quests:0} }, totalXp: 5900 },
+    { id: 'u2', name: '鈴木 誠一', rarity: 4, affinity: 'water', skills: ['1級管工事施工管理技士', '冷凍機械責任者'], avatar: '👷', xp: { factory:{exp:600,quests:4}, hospital:{exp:840,quests:5}, office:{exp:400,quests:3}, hotel:{exp:1200,quests:6}, warehouse:{exp:0,quests:0}, elderly:{exp:200,quests:2}, government:{exp:0,quests:0}, school:{exp:200,quests:2}, shop:{exp:120,quests:2}, other:{exp:0,quests:0} }, totalXp: 3560 },
+    { id: 'u3', name: '佐藤 理恵', rarity: 3, affinity: 'wind',  skills: ['2級管工事施工管理技士', '排水設備工事責任技術者'], avatar: '🔧', xp: { factory:{exp:200,quests:2}, hospital:{exp:120,quests:2}, office:{exp:240,quests:3}, hotel:{exp:0,quests:0}, warehouse:{exp:120,quests:2}, elderly:{exp:0,quests:0}, government:{exp:120,quests:2}, school:{exp:120,quests:2}, shop:{exp:50,quests:1}, other:{exp:50,quests:1} }, totalXp: 1020 },
+    { id: 'u4', name: '山田 浩二', rarity: 3, affinity: 'earth', skills: ['給水装置工事主任技術者', '消防設備士（甲4類）'], avatar: '🪛', xp: { factory:{exp:0,quests:0}, hospital:{exp:240,quests:3}, office:{exp:120,quests:2}, hotel:{exp:0,quests:0}, warehouse:{exp:50,quests:1}, elderly:{exp:240,quests:3}, government:{exp:0,quests:0}, school:{exp:120,quests:2}, shop:{exp:0,quests:0}, other:{exp:50,quests:1} }, totalXp: 820 },
+    { id: 'u5', name: '伊藤 美咲', rarity: 4, affinity: 'water', skills: ['ガス主任技術者', '冷凍機械責任者'], avatar: '🔩', xp: { factory:{exp:400,quests:3}, hospital:{exp:0,quests:0}, office:{exp:600,quests:5}, hotel:{exp:700,quests:4}, warehouse:{exp:240,quests:3}, elderly:{exp:0,quests:0}, government:{exp:200,quests:2}, school:{exp:0,quests:0}, shop:{exp:240,quests:3}, other:{exp:120,quests:2} }, totalXp: 2500 },
+    { id: 'u6', name: '渡辺 大樹', rarity: 2, affinity: 'earth', skills: ['2級管工事施工管理技士', '排水設備工事責任技術者'], avatar: '🔨', xp: { factory:{exp:120,quests:2}, hospital:{exp:0,quests:0}, office:{exp:50,quests:1}, hotel:{exp:0,quests:0}, warehouse:{exp:120,quests:2}, elderly:{exp:50,quests:1}, government:{exp:0,quests:0}, school:{exp:50,quests:1}, shop:{exp:0,quests:0}, other:{exp:50,quests:1} }, totalXp: 440 },
+    { id: 'u7', name: '中村 健',   rarity: 3, affinity: 'fire',  skills: ['給水装置工事主任技術者', '管工事施工管理技士補'], avatar: '🏗️', xp: { factory:{exp:240,quests:3}, hospital:{exp:120,quests:2}, office:{exp:120,quests:2}, hotel:{exp:120,quests:2}, warehouse:{exp:0,quests:0}, elderly:{exp:120,quests:2}, government:{exp:50,quests:1}, school:{exp:120,quests:2}, shop:{exp:50,quests:1}, other:{exp:0,quests:0} }, totalXp: 940 },
+    { id: 'u8', name: '小林 奈々', rarity: 2, affinity: 'wind',  skills: ['消防設備士（甲4類）', '2級管工事施工管理技士'], avatar: '🧱', xp: { factory:{exp:0,quests:0}, hospital:{exp:120,quests:2}, office:{exp:50,quests:1}, hotel:{exp:0,quests:0}, warehouse:{exp:50,quests:1}, elderly:{exp:120,quests:2}, government:{exp:50,quests:1}, school:{exp:120,quests:2}, shop:{exp:0,quests:0}, other:{exp:50,quests:1} }, totalXp: 560 },
   ];
   saveData();
   render();
@@ -873,9 +1473,34 @@ function loadData() {
   else initSampleData();
 }
 
+// ── ASSIGN HELPERS (assignedIds: [{uid, start, end}] or legacy string) ──
+function normalizeAssigned(q) {
+  // migrate legacy string[] to object[]
+  if (!q.assignedIds) q.assignedIds = [];
+  q.assignedIds = q.assignedIds.map(a =>
+    typeof a === 'string' ? { uid: a, start: q.start, end: q.end } : a
+  );
+}
+function getAssignedUids(q) {
+  normalizeAssigned(q);
+  return q.assignedIds.map(a => a.uid);
+}
+function getAssignment(q, uid) {
+  normalizeAssigned(q);
+  return q.assignedIds.find(a => a.uid === uid);
+}
+
 // ── CONFLICT DETECTION ──
 function hasConflict(unitId, questId) {
-  return quests.some(q => q.id !== questId && q.assignedIds.includes(unitId) && periodsOverlap(q, quests.find(x => x.id === questId)));
+  const q = quests.find(x => x.id === questId);
+  if (!q) return false;
+  const qa = getAssignment(q, unitId) || { start: q.start, end: q.end };
+  return quests.some(q2 => {
+    if (q2.id === questId) return false;
+    const a2 = getAssignment(q2, unitId);
+    if (!a2) return false;
+    return new Date(qa.start) <= new Date(a2.end) && new Date(qa.end) >= new Date(a2.start);
+  });
 }
 function periodsOverlap(a, b) {
   if (!a || !b) return false;
@@ -884,12 +1509,17 @@ function periodsOverlap(a, b) {
 function getUnitConflicts() {
   const conflicts = {};
   quests.forEach(q => {
-    q.assignedIds.forEach(uid => {
+    normalizeAssigned(q);
+    q.assignedIds.forEach(a => {
       quests.forEach(q2 => {
-        if (q2.id !== q.id && q2.assignedIds.includes(uid) && periodsOverlap(q, q2)) {
-          if (!conflicts[uid]) conflicts[uid] = [];
-          if (!conflicts[uid].includes(q.id)) conflicts[uid].push(q.id);
-          if (!conflicts[uid].includes(q2.id)) conflicts[uid].push(q2.id);
+        if (q2.id === q.id) return;
+        normalizeAssigned(q2);
+        const a2 = q2.assignedIds.find(x => x.uid === a.uid);
+        if (!a2) return;
+        if (new Date(a.start) <= new Date(a2.end) && new Date(a.end) >= new Date(a2.start)) {
+          if (!conflicts[a.uid]) conflicts[a.uid] = [];
+          if (!conflicts[a.uid].includes(q.id)) conflicts[a.uid].push(q.id);
+          if (!conflicts[a.uid].includes(q2.id)) conflicts[a.uid].push(q2.id);
         }
       });
     });
@@ -926,21 +1556,25 @@ function renderQuestList() {
     return;
   }
   el.innerHTML = quests.map(q => {
+    normalizeAssigned(q);
+    const assignedUids = getAssignedUids(q);
     const diff = getDifficulty(q.amount);
     const maxSlots = getRequiredHeadcount(diff);
-    const assigned = q.assignedIds.length;
+    const assigned = assignedUids.length;
     const hasConf = questConflicts.has(q.id);
     const slotPips = Array.from({length: maxSlots}, (_, i) => {
-      const uid = q.assignedIds[i];
+      const uid = assignedUids[i];
       const u = uid ? units.find(x => x.id === uid) : null;
       const isConf = uid && conflicts[uid];
       return `<div class="slot-pip ${u ? 'filled' : ''}" title="${u ? u.name : '空き'}" style="${u ? `background:${rarityColor(u.rarity)};border-color:${rarityColor(u.rarity)};color:${rarityColor(u.rarity)};` : ''}${isConf ? 'background:var(--red);border-color:var(--red);' : ''}">${u ? u.avatar : '○'}</div>`;
     }).join('');
-    return `<div class="quest-card diff-${diff.level} ${q.id === selectedQuestId ? 'selected' : ''} ${hasConf ? 'has-conflict' : ''}" onclick="selectQuest('${q.id}')">
+    const cardBorderColor = q.color || '';
+    return `<div class="quest-card diff-${diff.level} ${q.id === selectedQuestId ? 'selected' : ''} ${hasConf ? 'has-conflict' : ''}" onclick="selectQuest('${q.id}')"${cardBorderColor ? ` style="--card-accent:${cardBorderColor}"` : ''}>
       <div class="quest-top">
         <div class="quest-name">${q.name}</div>
         <div style="display:flex;align-items:center;gap:6px;flex-shrink:0;">
           <div class="diff-badge">${diff.label}</div>
+          <button onclick="event.stopPropagation();openColorModal('${q.id}')" title="カラー変更" style="background:none;border:none;cursor:pointer;font-size:13px;padding:2px 4px;border-radius:4px;line-height:1;transition:opacity 0.15s;opacity:0.5;" onmouseenter="this.style.opacity='1'" onmouseleave="this.style.opacity='0.5'">🎨</button>
           <button onclick="event.stopPropagation();editQuest('${q.id}')" title="編集" style="background:none;border:none;cursor:pointer;color:var(--text3);font-size:13px;padding:2px 4px;border-radius:4px;line-height:1;transition:color 0.15s;" onmouseenter="this.style.color='var(--accent)'" onmouseleave="this.style.color='var(--text3)'">✎</button>
           <button onclick="event.stopPropagation();deleteQuest('${q.id}')" title="この案件を削除" style="background:none;border:none;cursor:pointer;color:var(--text3);font-size:14px;padding:2px 4px;border-radius:4px;line-height:1;transition:color 0.15s;" onmouseenter="this.style.color='var(--red)'" onmouseleave="this.style.color='var(--text3)'">✕</button>
         </div>
@@ -969,18 +1603,40 @@ function renderAssignBoard(qid) {
   document.getElementById('assign-header').style.display = '';
   document.getElementById('detail-title').textContent = q.name;
 
-  const hasConf = q.assignedIds.some(uid => conflicts[uid]);
+  const hasConf = getAssignedUids(q).some(uid => conflicts[uid]);
+  const recLv = getRecommendedLevel(diff);
+  const assignedLvSum = getAssignedUids(q).reduce((s, uid) => {
+    const u = units.find(x => x.id === uid);
+    return s + (u ? getUnitTotalLevel(u) : 0);
+  }, 0);
+  const lvShort = q.assignedIds.length > 0 && assignedLvSum < recLv * q.assignedIds.length;
+  const cat = CATEGORIES[q.category] || CATEGORIES.other;
   document.getElementById('detail-meta').innerHTML = `
     <span class="meta-chip">📅 ${q.start} → ${q.end}</span>
     <span class="meta-chip">💴 ${Number(q.amount).toLocaleString()}円</span>
     <span class="meta-chip" style="color:${diff.color}">${diff.label} Lv.${diff.level}</span>
+    <span class="meta-chip">${cat.icon} ${cat.label}</span>
     <span class="meta-chip">👥 ${q.assignedIds.length}/${maxSlots}名</span>
     ${hasConf ? '<span class="meta-chip warning">⚠ 重複あり</span>' : ''}
+    ${lvShort ? `<span class="meta-chip warning">⚡ 推奨Lv不足（推奨${recLv}以上/人）</span>` : ''}
   `;
+  // EXP Grant button (shown when at least 1 member assigned)
+  const grantBtn = q.assignedIds.length > 0
+    ? `<button class="action-btn" onclick="grantQuestXp('${q.id}')" title="完了時にEXP付与">✨ EXP付与</button>`
+    : '';
+  const existingGrantBtn = document.getElementById('exp-grant-btn-wrap');
+  if (existingGrantBtn) existingGrantBtn.remove();
+  const actionsEl = document.querySelector('.assign-actions');
+  if (actionsEl && q.assignedIds.length > 0) {
+    const wrap = document.createElement('span');
+    wrap.id = 'exp-grant-btn-wrap';
+    wrap.innerHTML = grantBtn;
+    actionsEl.appendChild(wrap);
+  }
 
   // Skill requirements
   const reqHtml = q.skills.map(skill => {
-    const met = q.assignedIds.some(uid => {
+    const met = getAssignedUids(q).some(uid => {
       const u = units.find(x => x.id === uid);
       return u && u.skills.some(s => s.includes(skill) || skill.includes(s.split(' ')[0]));
     });
@@ -994,10 +1650,11 @@ function renderAssignBoard(qid) {
   let affinityHtml = '';
   if (q.assignedIds.length >= 2) {
     const rows = [];
-    for (let i = 0; i < q.assignedIds.length; i++) {
-      for (let j = i+1; j < q.assignedIds.length; j++) {
-        const ua = units.find(x => x.id === q.assignedIds[i]);
-        const ub = units.find(x => x.id === q.assignedIds[j]);
+    const uids = getAssignedUids(q);
+    for (let i = 0; i < uids.length; i++) {
+      for (let j = i+1; j < uids.length; j++) {
+        const ua = units.find(x => x.id === uids[i]);
+        const ub = units.find(x => x.id === uids[j]);
         if (!ua || !ub) continue;
         const rel = getRelationBetween(ua, ub);
         const active = evalRelation(rel, ua, ub);
@@ -1017,61 +1674,186 @@ function renderAssignBoard(qid) {
     }
   }
 
-  // Unit slots
-  const slotCards = Array.from({length: maxSlots}, (_, i) => {
-    const uid = q.assignedIds[i];
+  // Unit slots — recommended slots + extra up to MAX_SLOTS
+  const assignedUids = getAssignedUids(q);
+  const recommended = maxSlots;
+  const displaySlots = Math.max(recommended, assignedUids.length) + (assignedUids.length >= recommended ? 1 : 0);
+  const slotCount = Math.min(displaySlots, MAX_SLOTS);
+
+  const slotCards = Array.from({length: slotCount}, (_, i) => {
+    const uid = assignedUids[i];
     const u = uid ? units.find(x => x.id === uid) : null;
+    const assign = uid ? getAssignment(q, uid) : null;
     const isConf = uid && conflicts[uid];
+    const isPartial = assign && (assign.start !== q.start || assign.end !== q.end);
+    const isExtra = i >= recommended;
     if (u) {
-      return `<div class="unit-slot-card filled ${isConf ? 'conflict-unit' : ''}" onclick="removeFromQuest('${qid}','${uid}')" title="クリックで外す">
+      return `<div class="unit-slot-card filled ${isConf ? 'conflict-unit' : ''}"
+        onclick="removeFromQuest('${qid}','${uid}')" title="クリックで外す"
+        style="${isExtra ? 'border-color:var(--blue);' : ''}">
+        ${isExtra ? '<div style="position:absolute;top:4px;left:6px;font-size:9px;color:var(--blue);font-weight:600;">追加</div>' : ''}
         ${isConf ? '<span class="slot-conflict-icon">⚠</span>' : ''}
         <div class="slot-avatar" style="border-color:${rarityColor(u.rarity)};background:${rarityColor(u.rarity)}22">${u.avatar}</div>
         <div class="slot-unit-name">${u.name}</div>
         <div class="slot-unit-role">${AFFINITY_LABELS[u.affinity]}属性</div>
         <div class="slot-rarity-stars" style="color:${rarityColor(u.rarity)}">${RARITY_STARS[u.rarity]}</div>
+        ${isPartial ? `<div style="font-size:9px;color:var(--blue);margin-top:3px;">${assign.start}〜${assign.end}</div>` : ''}
         ${isConf ? '<div style="font-size:10px;color:var(--red);margin-top:3px;">期間重複</div>' : ''}
       </div>`;
     }
-    return `<div class="unit-slot-card empty" onclick="showRosterHint()">
-      <div class="empty-plus">＋</div>
-      <div class="empty-label">スロット ${i+1}</div>
+    return `<div class="unit-slot-card empty drop-slot" data-slot="${i}"
+      ondragover="event.preventDefault();this.style.borderColor='var(--accent)'"
+      ondragleave="this.style.borderColor=''"
+      ondrop="dropToSlot(event,'${qid}')"
+      onclick="showRosterHint()"
+      style="${isExtra ? 'border-color:rgba(74,158,255,0.3);' : ''}">
+      <div class="empty-plus" style="${isExtra ? 'color:var(--blue);opacity:0.5;' : ''}">＋</div>
+      <div class="empty-label" style="${isExtra ? 'color:var(--blue);opacity:0.6;' : ''}">
+        ${isExtra ? `追加スロット ${i+1}` : `推奨 ${i+1}`}
+      </div>
     </div>`;
   }).join('');
 
   document.getElementById('assign-body').innerHTML = `
     <div class="section-label">必要資格</div>
     <div class="req-grid">${reqHtml}</div>
-    <div class="section-label">アサインメンバー（${q.assignedIds.length}/${maxSlots}名）</div>
+    <div class="section-label">
+      アサインメンバー（${assignedUids.length}名 / 推奨${recommended}名・最大${MAX_SLOTS}名）
+    </div>
     <div class="unit-slots-grid">${slotCards}</div>
     ${affinityHtml}
   `;
 }
 
+// ── ROSTER STATE ──
+let rosterSortKey = 'rarity';
+let rosterFilter = '';
+
+function setRosterSort(key, btn) {
+  rosterSortKey = key;
+  document.querySelectorAll('.roster-sort-btn').forEach(b => {
+    b.style.background = 'var(--bg3)';
+    b.style.color = 'var(--text2)';
+    b.style.borderColor = 'var(--border)';
+    b.style.fontWeight = '';
+  });
+  btn.style.background = 'var(--accent)';
+  btn.style.color = '#1a0e00';
+  btn.style.borderColor = 'var(--accent)';
+  btn.style.fontWeight = '700';
+  renderRoster(rosterFilter);
+}
+
+function filterRoster(val) {
+  rosterFilter = val;
+  renderRoster(val);
+}
+
+function getUnitPastQuests(uid) {
+  return quests.filter(q => {
+    normalizeAssigned(q);
+    return getAssignedUids(q).includes(uid);
+  });
+}
+
 function renderRoster(filter = '') {
   const conflicts = getUnitConflicts();
   const el = document.getElementById('roster-list');
-  const f = filter.toLowerCase();
-  const filtered = units.filter(u =>
+  const f = (filter || rosterFilter).toLowerCase();
+
+  // Filter
+  let filtered = units.filter(u =>
     !f || u.name.includes(f) || u.skills.some(s => s.toLowerCase().includes(f))
   );
+
+  // Sort
+  const selectedQ = selectedQuestId ? quests.find(q => q.id === selectedQuestId) : null;
+  filtered = [...filtered].sort((a, b) => {
+    if (rosterSortKey === 'rarity') return b.rarity - a.rarity;
+    if (rosterSortKey === 'name') return a.name.localeCompare(b.name, 'ja');
+    if (rosterSortKey === 'free') {
+      const ac = !!conflicts[a.id], bc = !!conflicts[b.id];
+      return ac === bc ? b.rarity - a.rarity : (ac ? 1 : -1);
+    }
+    if (rosterSortKey === 'tenure') {
+      const at = a.joindate ? new Date(a.joindate).getTime() : Infinity;
+      const bt = b.joindate ? new Date(b.joindate).getTime() : Infinity;
+      return at - bt; // 古い=勤続長い
+    }
+    return 0;
+  });
+
   if (!filtered.length) {
     el.innerHTML = '<div style="padding:16px;text-align:center;color:var(--text3);font-size:12px;">該当する人材がいません</div>';
     return;
   }
+
+  // Show color legend when quest selected
+  const legend = document.getElementById('roster-color-legend');
+  if (legend) legend.style.display = selectedQuestId ? 'flex' : 'none';
+
   el.innerHTML = filtered.map(u => {
-    const isAssignedHere = selectedQuestId && quests.find(q => q.id === selectedQuestId)?.assignedIds.includes(u.id);
+    const isAssignedHere = selectedQ && getAssignedUids(selectedQ).includes(u.id);
     const hasConf = !!conflicts[u.id];
+
+    // Color coding based on selected quest period
+    let cardColorClass = '';
+    if (selectedQ) {
+      const questPeriod = { start: selectedQ.start, end: selectedQ.end };
+      const unitBusy = quests.some(q => {
+        if (q.id === selectedQuestId) return false;
+        normalizeAssigned(q);
+        const ua = getAssignment(q, u.id);
+        if (!ua) return false;
+        return new Date(ua.start) <= new Date(questPeriod.end) && new Date(ua.end) >= new Date(questPeriod.start);
+      });
+      if (isAssignedHere) cardColorClass = '';
+      else if (unitBusy) cardColorClass = 'conflict-for-quest';
+      else cardColorClass = 'available-for-quest';
+    }
+
     const dotClass = hasConf ? 'dot-busy' : isAssignedHere ? 'dot-partial' : 'dot-free';
     const statusTitle = hasConf ? '重複あり' : isAssignedHere ? 'この案件にアサイン済み' : '空き';
-    return `<div class="unit-card ${isAssignedHere ? 'already-assigned' : ''}" onclick="assignUnit('${u.id}')" title="${statusTitle}">
+
+    // Past quests (max 3 shown)
+    const pastQs = getUnitPastQuests(u.id);
+    const pastHtml = pastQs.length > 0
+      ? `<div style="font-size:9px;color:var(--text3);margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
+          📋 ${pastQs.slice(0,3).map(q=>q.name).join('・')}${pastQs.length > 3 ? ` 他${pastQs.length-3}件` : ''}
+        </div>`
+      : '';
+
+    // Draw capability badge
+    const drawBadge = u.canDraw
+      ? `<span style="font-size:9px;background:rgba(61,214,140,0.15);color:var(--green);border:1px solid rgba(61,214,140,0.3);border-radius:3px;padding:1px 5px;flex-shrink:0;">📐</span>`
+      : '';
+
+    // Specialty badge
+    const specialty = getSpecialtyBadge(u);
+    const specialtyBadge = specialty
+      ? `<span style="font-size:9px;background:rgba(155,89,255,0.15);color:var(--purple);border:1px solid rgba(155,89,255,0.35);border-radius:3px;padding:1px 5px;flex-shrink:0;">${specialty.label}</span>`
+      : '';
+
+    // Total level
+    const totalLv = getUnitTotalLevel(u);
+    const lvBadge = `<span style="font-size:9px;background:rgba(245,166,35,0.12);color:var(--accent);border:1px solid rgba(245,166,35,0.3);border-radius:3px;padding:1px 6px;flex-shrink:0;font-weight:700;">Lv.${totalLv}</span>`;
+
+    return `<div class="unit-card ${isAssignedHere ? 'already-assigned' : ''} ${cardColorClass}"
+      draggable="true"
+      ondragstart="rosterDragStart(event,'${u.id}')"
+      ondragend="rosterDragEnd(event)"
+      onclick="assignUnit('${u.id}')" title="${statusTitle}">
       <div class="unit-status-dot ${dotClass}" title="${statusTitle}"></div>
       <div class="unit-avatar r${u.rarity}">${u.avatar}</div>
       <div class="unit-info">
-        <div class="unit-name">${u.name}</div>
+        <div class="unit-name" style="display:flex;align-items:center;gap:4px;flex-wrap:wrap;">${u.name} ${drawBadge} ${lvBadge}</div>
+        ${specialtyBadge ? `<div style="margin-bottom:2px;">${specialtyBadge}</div>` : ''}
         <div class="unit-rarity" style="color:${rarityColor(u.rarity)}">${RARITY_STARS[u.rarity]} ${RARITY_LABELS[u.rarity]}${u.birthdate ? ` · ${calcAge(u.birthdate)}歳` : ''}${u.joindate ? ` · 勤続${calcTenure(u.joindate)}` : ''}</div>
-        <div class="unit-skills">${u.skills.join('・')}</div>
+        <div class="unit-skills" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${u.skills.join('・')}</div>
+        ${pastHtml}
       </div>
       <div style="display:flex;flex-direction:column;gap:2px;flex-shrink:0;">
+        <button onclick="event.stopPropagation();switchView('status');setTimeout(()=>openStatusDetail('${u.id}'),50)" title="Statusを見る" style="background:none;border:none;cursor:pointer;color:var(--text3);font-size:13px;padding:2px 4px;border-radius:4px;line-height:1;transition:color 0.15s;" onmouseenter="this.style.color='var(--blue)'" onmouseleave="this.style.color='var(--text3)'">📊</button>
         <button onclick="event.stopPropagation();openAffinityModal('${u.id}')" title="相性設定" style="background:none;border:none;cursor:pointer;color:var(--text3);font-size:13px;padding:2px 4px;border-radius:4px;line-height:1;transition:color 0.15s;" onmouseenter="this.style.color='var(--green)'" onmouseleave="this.style.color='var(--text3)'">♥</button>
         <button onclick="event.stopPropagation();editUnit('${u.id}')" title="編集" style="background:none;border:none;cursor:pointer;color:var(--text3);font-size:13px;padding:2px 4px;border-radius:4px;line-height:1;transition:color 0.15s;" onmouseenter="this.style.color='var(--accent)'" onmouseleave="this.style.color='var(--text3)'">✎</button>
         <button onclick="event.stopPropagation();deleteUnit('${u.id}')" title="削除" style="background:none;border:none;cursor:pointer;color:var(--text3);font-size:14px;padding:2px 4px;border-radius:4px;line-height:1;transition:color 0.15s;" onmouseenter="this.style.color='var(--red)'" onmouseleave="this.style.color='var(--text3)'">✕</button>
@@ -1089,23 +1871,22 @@ function selectQuest(id) {
 function assignUnit(uid) {
   if (!selectedQuestId) { showToast('先に案件を選択してください', 'info'); return; }
   const q = quests.find(x => x.id === selectedQuestId);
+  normalizeAssigned(q);
   const diff = getDifficulty(q.amount);
   const max = getRequiredHeadcount(diff);
-  if (q.assignedIds.includes(uid)) {
+  if (getAssignedUids(q).includes(uid)) {
     removeFromQuest(selectedQuestId, uid);
     return;
   }
-  if (q.assignedIds.length >= max) { showToast(`最大${max}名です`, 'error'); return; }
-  q.assignedIds.push(uid);
-  const u = units.find(x => x.id === uid);
-  const isConf = hasConflict(uid, selectedQuestId);
-  showToast(`${u.name} をアサインしました${isConf ? ' ⚠ 期間重複あり' : ''}`, isConf ? 'error' : 'success');
-  saveData(); render();
+  if (q.assignedIds.length >= MAX_SLOTS) { showToast(`最大${MAX_SLOTS}名です`, 'error'); return; }
+  // Open partial assign modal
+  openPartialAssignModal(uid, selectedQuestId);
 }
 
 function removeFromQuest(qid, uid) {
   const q = quests.find(x => x.id === qid);
-  q.assignedIds = q.assignedIds.filter(x => x !== uid);
+  normalizeAssigned(q);
+  q.assignedIds = q.assignedIds.filter(a => a.uid !== uid);
   const u = units.find(x => x.id === uid);
   showToast(`${u.name} を外しました`, 'info');
   saveData(); render();
@@ -1119,33 +1900,164 @@ function clearAssign() {
   saveData(); render();
 }
 
-function autoAssign() {
+// ── AUTO ASSIGN ──
+let aaResult = [];
+
+function openAutoAssignModal() {
   if (!selectedQuestId) return;
   const q = quests.find(x => x.id === selectedQuestId);
   const diff = getDifficulty(q.amount);
-  const max = getRequiredHeadcount(diff);
-  q.assignedIds = [];
+  const rec = getRequiredHeadcount(diff);
+  document.getElementById('aa-quest-info').textContent = `${q.name}　推奨${rec}名 / 最大${MAX_SLOTS}名`;
+  document.getElementById('aa-count').value = rec;
+  document.getElementById('aa-count-hint').textContent = `推奨: ${rec}名`;
+  document.getElementById('aa-preview').innerHTML = '';
+  aaResult = [];
+  document.getElementById('auto-assign-modal').style.display = 'flex';
+}
 
-  // Score each unit
-  const scored = units.map(u => {
-    let score = u.rarity * 20;
+function setRecommendedCount() {
+  const q = quests.find(x => x.id === selectedQuestId);
+  if (!q) return;
+  const diff = getDifficulty(q.amount);
+  document.getElementById('aa-count').value = getRequiredHeadcount(diff);
+}
+
+// 都道府県の一致度で距離スコアを簡易算出
+function distanceScore(unitAddr, questAddr) {
+  if (!unitAddr || !questAddr) return 0;
+  const prefs = ['北海道','青森','岩手','宮城','秋田','山形','福島','茨城','栃木','群馬','埼玉','千葉','東京','神奈川','新潟','富山','石川','福井','山梨','長野','岐阜','静岡','愛知','三重','滋賀','京都','大阪','兵庫','奈良','和歌山','鳥取','島根','岡山','広島','山口','徳島','香川','愛媛','高知','福岡','佐賀','長崎','熊本','大分','宮崎','鹿児島','沖縄'];
+  const uPref = prefs.find(p => unitAddr.includes(p));
+  const qPref = prefs.find(p => questAddr.includes(p));
+  if (!uPref || !qPref) return 0;
+  if (uPref === qPref) return 40; // 同都道府県
+  // 隣接地域は20点（簡易）
+  const ui = prefs.indexOf(uPref), qi = prefs.indexOf(qPref);
+  if (Math.abs(ui - qi) <= 2) return 20;
+  return 0;
+}
+
+function calcUnitScore(u, q, opts) {
+  let score = 0;
+  const conflict = hasConflict(u.id, q.id);
+
+  // 空き優先
+  if (opts.free) score += conflict ? 0 : 40;
+  // 資格マッチ
+  if (opts.skill) {
     q.skills.forEach(skill => {
-      if (u.skills.some(s => s.includes(skill.split('').slice(0,4).join('')) || skill.includes(s.split('').slice(0,4).join('')))) score += 50;
+      if (u.skills.some(s => s.includes(skill.slice(0,4)) || skill.includes(s.slice(0,4)))) score += 50;
     });
-    if (!hasConflict(u.id, q.id)) score += 30;
-    return { u, score };
-  }).sort((a, b) => b.score - a.score);
-
-  // Build team greedily with affinity
-  const team = [];
-  for (const { u } of scored) {
-    if (team.length >= max) break;
-    team.push(u);
   }
-  q.assignedIds = team.map(u => u.id);
-  showToast(`⚡ ${team.length}名を自動アサインしました`, 'success');
+  // レアリティ
+  if (opts.rarity) score += u.rarity * 15;
+  // 居住地の近さ
+  if (opts.distance) score += distanceScore(u.address, q.address);
+  // 勤続年数
+  if (opts.tenure && u.joindate) {
+    const years = (new Date() - new Date(u.joindate)) / (1000 * 60 * 60 * 24 * 365);
+    score += Math.min(years * 3, 30);
+  }
+  return { score, conflict };
+}
+
+function buildTeam(q, count, opts) {
+  const allowConflict = document.querySelector('input[name="aa-conflict"]:checked').value === 'warn';
+  const excludeBad = document.getElementById('aa-exclude-bad').checked;
+
+  // Score all units
+  let candidates = units.map(u => {
+    const { score, conflict } = calcUnitScore(u, q, opts);
+    return { u, score, conflict };
+  });
+
+  // Filter conflict
+  if (!allowConflict) candidates = candidates.filter(c => !c.conflict);
+
+  // Sort by score
+  candidates.sort((a, b) => b.score - a.score);
+
+  // Build team greedily, respecting affinity rules
+  const team = [];
+  for (const cand of candidates) {
+    if (team.length >= count) break;
+    // Check bad affinity against already selected
+    if (excludeBad) {
+      const hasBadPair = team.some(m => {
+        const rel = getRelationBetween(m.u, cand.u);
+        if (!rel) return false;
+        const active = evalRelation(rel, m.u, cand.u);
+        return active && (active.type === 'bad' || active.type === 'same_rarity_bad');
+      });
+      if (hasBadPair) continue;
+    }
+    // Affinity bonus for score display
+    if (opts.affinity) {
+      team.forEach(m => {
+        const rel = getRelationBetween(m.u, cand.u);
+        const active = rel ? evalRelation(rel, m.u, cand.u) : null;
+        if (active?.type === 'good') cand.score += active.value || 15;
+      });
+    }
+    team.push(cand);
+  }
+  return team;
+}
+
+function getOpts() {
+  return {
+    free:     document.getElementById('aa-prio-free').checked,
+    skill:    document.getElementById('aa-prio-skill').checked,
+    rarity:   document.getElementById('aa-prio-rarity').checked,
+    affinity: document.getElementById('aa-prio-affinity').checked,
+    distance: document.getElementById('aa-prio-distance').checked,
+    tenure:   document.getElementById('aa-prio-tenure').checked,
+  };
+}
+
+function previewAutoAssign() {
+  if (!selectedQuestId) return;
+  const q = quests.find(x => x.id === selectedQuestId);
+  normalizeAssigned(q);
+  const count = Math.min(parseInt(document.getElementById('aa-count').value) || 1, MAX_SLOTS);
+  aaResult = buildTeam(q, count, getOpts());
+
+  const el = document.getElementById('aa-preview');
+  if (!aaResult.length) {
+    el.innerHTML = '<div style="font-size:12px;color:var(--text3);padding:8px 0;">条件に合う候補が見つかりません</div>';
+    return;
+  }
+  el.innerHTML = `
+    <div style="font-size:11px;font-weight:500;color:var(--text2);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:8px;">プレビュー（${aaResult.length}名）</div>
+    ${aaResult.map((c, i) => {
+      const rc = rarityColor(c.u.rarity);
+      return `<div style="display:flex;align-items:center;gap:8px;padding:6px 10px;background:var(--bg3);border-radius:6px;margin-bottom:4px;border:1px solid ${c.conflict ? 'var(--red)' : 'var(--border)'};">
+        <div style="width:14px;height:14px;border-radius:50%;background:${rc};font-size:8px;display:flex;align-items:center;justify-content:center;color:#111;font-weight:700;flex-shrink:0;">${i+1}</div>
+        <span style="font-size:14px;">${c.u.avatar}</span>
+        <div style="flex:1;">
+          <div style="font-size:12px;font-weight:500;color:var(--text);">${c.u.name} ${c.conflict ? '<span style="color:var(--red);font-size:10px;">⚠ 重複</span>' : ''}</div>
+          <div style="font-size:10px;color:${rc};">${RARITY_STARS[c.u.rarity]} ${c.u.skills.slice(0,2).join('・')}</div>
+        </div>
+        <div style="font-size:11px;color:var(--accent);font-weight:600;">${Math.round(c.score)}pt</div>
+      </div>`;
+    }).join('')}`;
+}
+
+function confirmAutoAssign() {
+  if (!selectedQuestId) return;
+  const q = quests.find(x => x.id === selectedQuestId);
+  if (!aaResult.length) { previewAutoAssign(); if (!aaResult.length) return; }
+  normalizeAssigned(q);
+  q.assignedIds = aaResult.map(c => ({ uid: c.u.id, start: q.start, end: q.end }));
+  const warnCount = aaResult.filter(c => c.conflict).length;
+  showToast(`⚡ ${aaResult.length}名をアサインしました${warnCount ? ` (⚠ 重複${warnCount}名)` : ''}`, warnCount ? 'error' : 'success');
+  document.getElementById('auto-assign-modal').style.display = 'none';
+  aaResult = [];
   saveData(); render();
 }
+
+function autoAssign() { openAutoAssignModal(); } // 後方互換
+
 
 function deleteUnit(id) {
   const u = units.find(x => x.id === id);
@@ -1180,6 +2092,7 @@ function openQuestModal() {
   document.getElementById('q-name').value = '';
   document.getElementById('q-amount').value = '';
   document.getElementById('q-skills').value = '';
+  document.getElementById('q-address').value = '';
   document.getElementById('q-diff-preview').textContent = '';
   document.getElementById('quest-modal').style.display = 'flex';
 }
@@ -1193,6 +2106,8 @@ function editQuest(id) {
   document.getElementById('q-end').value = q.end;
   document.getElementById('q-amount').value = q.amount;
   document.getElementById('q-skills').value = q.skills.join(', ');
+  document.getElementById('q-address').value = q.address || '';
+  document.getElementById('q-category').value = q.category || 'other';
   document.getElementById('quest-modal').style.display = 'flex';
   updateDifficulty();
 }
@@ -1204,13 +2119,15 @@ function saveQuest() {
   const skillsRaw = document.getElementById('q-skills').value;
   if (!name || !start || !end || isNaN(amount)) { showToast('必須項目を入力してください', 'error'); return; }
   const skills = skillsRaw ? skillsRaw.split(',').map(s => s.trim()).filter(Boolean) : [];
+  const address = document.getElementById('q-address').value.trim();
+  const category = document.getElementById('q-category').value;
   const editId = document.getElementById('q-edit-id').value;
   if (editId) {
     const q = quests.find(x => x.id === editId);
-    q.name = name; q.start = start; q.end = end; q.amount = amount; q.skills = skills;
+    q.name = name; q.start = start; q.end = end; q.amount = amount; q.skills = skills; q.address = address; q.category = category;
     showToast('案件を更新しました', 'success');
   } else {
-    quests.push({ id: 'q' + Date.now(), name, start, end, amount, skills, assignedIds: [] });
+    quests.push({ id: 'q' + Date.now(), name, start, end, amount, skills, address, category, assignedIds: [] });
     showToast('案件を追加しました', 'success');
   }
   document.getElementById('quest-modal').style.display = 'none';
@@ -1269,11 +2186,18 @@ function openUnitModal() {
   document.getElementById('u-name').value = '';
   document.getElementById('u-birthdate').value = '';
   document.getElementById('u-joindate').value = '';
-  document.getElementById('u-skills').value = '';
+  document.getElementById('u-address').value = '';
+  document.getElementById('u-can-draw').checked = false;
   document.getElementById('u-rarity').value = '3';
   document.getElementById('u-affinity').value = 'fire';
   document.getElementById('u-age-preview').textContent = '—';
   document.getElementById('u-tenure-preview').textContent = '';
+  // Reset skill tab to first
+  switchSkillTab('kanko', document.querySelector('.skill-tab-btn'));
+  setSkillCheckboxes([]);
+  // Enter key for free skill
+  const fi = document.getElementById('u-skills-free-input');
+  if (fi) { fi.onkeydown = e => { if (e.key === 'Enter') { e.preventDefault(); addFreeSkill(); } }; }
   document.getElementById('unit-modal').style.display = 'flex';
 }
 function editUnit(id) {
@@ -1284,30 +2208,36 @@ function editUnit(id) {
   document.getElementById('u-name').value = u.name;
   document.getElementById('u-birthdate').value = u.birthdate || '';
   document.getElementById('u-joindate').value = u.joindate || '';
-  document.getElementById('u-skills').value = u.skills.join(', ');
+  document.getElementById('u-address').value = u.address || '';
+  document.getElementById('u-can-draw').checked = !!u.canDraw;
   document.getElementById('u-rarity').value = u.rarity;
   document.getElementById('u-affinity').value = u.affinity;
+  switchSkillTab('kanko', document.querySelector('.skill-tab-btn'));
+  setSkillCheckboxes(u.skills || []);
   updateAgePreview();
   updateTenurePreview();
+  const fi = document.getElementById('u-skills-free-input');
+  if (fi) { fi.onkeydown = e => { if (e.key === 'Enter') { e.preventDefault(); addFreeSkill(); } }; }
   document.getElementById('unit-modal').style.display = 'flex';
 }
 function saveUnit() {
   const name = document.getElementById('u-name').value.trim();
   if (!name) { showToast('名前を入力してください', 'error'); return; }
-  const skillsRaw = document.getElementById('u-skills').value;
-  const skills = skillsRaw ? skillsRaw.split(',').map(s => s.trim()).filter(Boolean) : [];
+  const skills = getSelectedSkills();
   const rarity = parseInt(document.getElementById('u-rarity').value);
   const affinity = document.getElementById('u-affinity').value;
   const birthdate = document.getElementById('u-birthdate').value || null;
   const joindate = document.getElementById('u-joindate').value || null;
+  const address = document.getElementById('u-address').value.trim() || null;
+  const canDraw = document.getElementById('u-can-draw').checked;
   const editId = document.getElementById('u-edit-id').value;
   if (editId) {
     const u = units.find(x => x.id === editId);
-    Object.assign(u, { name, skills, rarity, affinity, birthdate, joindate });
+    Object.assign(u, { name, skills, rarity, affinity, birthdate, joindate, address, canDraw });
     showToast(`${name} を更新しました`, 'success');
   } else {
     const avatar = AVATARS[units.length % AVATARS.length];
-    units.push({ id: 'u' + Date.now(), name, rarity, affinity, skills, avatar, birthdate, joindate });
+    units.push({ id: 'u' + Date.now(), name, rarity, affinity, skills, avatar, birthdate, joindate, address, canDraw });
     showToast(`${name} を追加しました`, 'success');
   }
   document.getElementById('unit-modal').style.display = 'none';
@@ -1404,6 +2334,130 @@ function deleteRelation(uid, idx) {
 }
 
 
+// ── SKILL TABS ──
+let activeSkillTab = 'kanko';
+let _selectedSkills = []; // internal state for skill modal
+
+function switchSkillTab(tab, btn) {
+  activeSkillTab = tab;
+  ['kanko','gas','fire','electric','other','free'].forEach(t => {
+    const el = document.getElementById('skill-tab-' + t);
+    if (el) el.style.display = t === tab ? '' : 'none';
+  });
+  document.querySelectorAll('.skill-tab-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+}
+
+function toggleSkill(skillName, el) {
+  const idx = _selectedSkills.indexOf(skillName);
+  if (idx === -1) {
+    _selectedSkills.push(skillName);
+    el.classList.add('selected');
+  } else {
+    _selectedSkills.splice(idx, 1);
+    el.classList.remove('selected');
+  }
+  renderSkillTags();
+}
+
+function addFreeSkill() {
+  const input = document.getElementById('u-skills-free-input');
+  const val = (input.value || '').trim();
+  if (!val) return;
+  val.split(',').map(s => s.trim()).filter(Boolean).forEach(s => {
+    if (!_selectedSkills.includes(s)) _selectedSkills.push(s);
+  });
+  input.value = '';
+  renderSkillTags();
+}
+
+function removeSkill(skillName) {
+  _selectedSkills = _selectedSkills.filter(s => s !== skillName);
+  // Update pick-item visual
+  document.querySelectorAll('.skill-pick-item').forEach(el => {
+    if (el.textContent.trim() === skillName) el.classList.remove('selected');
+  });
+  renderSkillTags();
+}
+
+function renderSkillTags() {
+  const container = document.getElementById('skill-selected-tags');
+  const placeholder = document.getElementById('skill-tags-placeholder');
+  if (!container) return;
+  if (_selectedSkills.length === 0) {
+    container.innerHTML = '<span id="skill-tags-placeholder" style="font-size:11px;color:var(--text3);line-height:22px;">資格をタップして追加…</span>';
+    return;
+  }
+  container.innerHTML = _selectedSkills.map(s =>
+    `<span class="skill-tag">${s}<span class="skill-tag-remove" onclick="removeSkill('${s.replace(/'/g,"\\'")}')" title="外す">×</span></span>`
+  ).join('');
+}
+
+function getSelectedSkills() {
+  return [..._selectedSkills];
+}
+
+function setSkillCheckboxes(skills) {
+  _selectedSkills = [...skills];
+  // Sync pick-item highlights
+  document.querySelectorAll('.skill-pick-item').forEach(el => {
+    el.classList.toggle('selected', skills.includes(el.textContent.trim()));
+  });
+  // Free field: skills not in known list
+  const knownSkills = [...document.querySelectorAll('.skill-pick-item')].map(el => el.textContent.trim());
+  const freeSkills = skills.filter(s => !knownSkills.includes(s));
+  const freeEl = document.getElementById('u-skills-free-input');
+  if (freeEl) freeEl.value = '';
+  renderSkillTags();
+}
+
+// ── QUEST COLOR PICKER ──
+let colorModalQuestId = null;
+
+function openColorModal(qid) {
+  colorModalQuestId = qid;
+  const q = quests.find(x => x.id === qid);
+  document.getElementById('color-quest-name').textContent = q.name;
+  document.getElementById('color-modal').style.display = 'flex';
+}
+
+function selectQuestColor(color) {
+  if (!colorModalQuestId) return;
+  const q = quests.find(x => x.id === colorModalQuestId);
+  if (q) { q.color = color; saveData(); render(); }
+  document.getElementById('color-modal').style.display = 'none';
+}
+
+
+let rosterDragUid = null;
+
+function rosterDragStart(e, uid) {
+  rosterDragUid = uid;
+  e.dataTransfer.effectAllowed = 'move';
+  e.currentTarget.style.opacity = '0.5';
+}
+function rosterDragEnd(e) {
+  e.currentTarget.style.opacity = '';
+  rosterDragUid = null;
+  document.querySelectorAll('.drop-slot').forEach(s => s.style.borderColor = '');
+}
+function dropToSlot(e, questId) {
+  e.preventDefault();
+  e.currentTarget.style.borderColor = '';
+  if (!rosterDragUid) return;
+  const q = quests.find(x => x.id === questId);
+  if (!q) return;
+  normalizeAssigned(q);
+  if (getAssignedUids(q).includes(rosterDragUid)) {
+    showToast('すでにアサイン済みです', 'info'); return;
+  }
+  if (q.assignedIds.length >= MAX_SLOTS) {
+    showToast(`最大${MAX_SLOTS}名です`, 'error'); return;
+  }
+  selectedQuestId = questId;
+  openPartialAssignModal(rosterDragUid, questId);
+}
+
 function showToast(msg, type = 'info') {
   const t = document.createElement('div');
   t.className = `toast ${type}`;
@@ -1418,9 +2472,12 @@ function switchView(view) {
   currentView = view;
   document.querySelector('.app').style.display = view === 'assign' ? 'flex' : 'none';
   document.getElementById('calendar-view').style.display = view === 'calendar' ? 'flex' : 'none';
+  document.getElementById('status-view').style.display = view === 'status' ? 'flex' : 'none';
   document.getElementById('nav-assign').classList.toggle('active', view === 'assign');
   document.getElementById('nav-calendar').classList.toggle('active', view === 'calendar');
+  document.getElementById('nav-status').classList.toggle('active', view === 'status');
   if (view === 'calendar') renderCalendar();
+  if (view === 'status') renderStatusView();
 }
 
 // ── CALENDAR STATE ──
@@ -1452,13 +2509,26 @@ function setFilter(f, el) {
   renderCalendar();
 }
 
-// ── CALENDAR RENDER ──
+// ── DRAG STATE ──
+let dragState = null; // { questId, unitId, startX, origLeft, barEl }
+
+
 function renderCalendar() {
   const conflicts = getUnitConflicts();
 
-  // Show 3 months: prev, current, next
-  const viewStart = new Date(calYear, calMonth - 1, 1);
-  const viewEnd   = new Date(calYear, calMonth + 2, 0); // last day of next month
+  // ナビ基準月の前後1ヶ月を最低表示範囲とし、全案件の期間を包含するよう動的拡張
+  const navStart = new Date(calYear, calMonth - 1, 1);
+  const navEnd   = new Date(calYear, calMonth + 2, 0);
+
+  let viewStart = new Date(navStart);
+  let viewEnd   = new Date(navEnd);
+
+  quests.forEach(q => {
+    const qs = new Date(q.start);
+    const qe = new Date(q.end);
+    if (qs < viewStart) viewStart = new Date(qs.getFullYear(), qs.getMonth(), 1);
+    if (qe > viewEnd)   viewEnd   = new Date(qe.getFullYear(), qe.getMonth() + 1, 0);
+  });
 
   // Build day array
   const days = [];
@@ -1468,25 +2538,27 @@ function renderCalendar() {
   const totalDays = days.length;
   const totalW = totalDays * DAY_W;
 
+  // Helper: date string → index (fast calculation)
+  const viewStartTime = viewStart.getTime();
+  function dateToIdx(str) {
+    const d = new Date(str); d.setHours(0,0,0,0);
+    return Math.round((d.getTime() - viewStartTime) / (1000 * 60 * 60 * 24));
+  }
+
   const today = new Date(); today.setHours(0,0,0,0);
-  const todayIdx = days.findIndex(d => d.toDateString() === today.toDateString());
+  const todayIdx = Math.round((today.getTime() - viewStartTime) / (1000 * 60 * 60 * 24));
 
   // Month label
   const monthNames = ['1月','2月','3月','4月','5月','6月','7月','8月','9月','10月','11月','12月'];
+  const startLabel = `${viewStart.getFullYear()}年${monthNames[viewStart.getMonth()]}`;
+  const endLabel   = `${viewEnd.getFullYear()}年${monthNames[viewEnd.getMonth()]}`;
   document.getElementById('cal-month-label').textContent =
-    `${calYear}年 ${monthNames[calMonth]}（前後1ヶ月表示）`;
+    startLabel === endLabel ? startLabel : `${startLabel} 〜 ${endLabel}`;
 
   // Filter units
   let displayUnits = units;
   if (calFilter === 'conflict') displayUnits = units.filter(u => conflicts[u.id]);
   if (calFilter === 'free') displayUnits = units.filter(u => !conflicts[u.id]);
-
-  // Helper: date string → index
-  function dateToIdx(str) {
-    const d = new Date(str); d.setHours(0,0,0,0);
-    const idx = days.findIndex(x => x.toDateString() === d.toDateString());
-    return idx;
-  }
 
   // Build month spans for header
   const monthSpans = [];
@@ -1553,12 +2625,18 @@ function renderCalendar() {
     const rc = rarityColor(u.rarity);
 
     // Find quests assigned to this unit, build bar descriptors
-    const assignedQuests = quests.filter(q => q.assignedIds.includes(u.id));
+    const assignedQuests = quests.filter(q => {
+      normalizeAssigned(q);
+      return getAssignedUids(q).includes(u.id);
+    });
     const barDescs = assignedQuests.map(q => {
+      const assign = getAssignment(q, u.id);
+      const barStart = assign ? assign.start : q.start;
+      const barEnd   = assign ? assign.end   : q.end;
       const diff = getDifficulty(q.amount);
-      const color = DIFF_COLORS[diff.level];
-      const startIdx = dateToIdx(q.start);
-      const endIdx   = dateToIdx(q.end);
+      const color = q.color || DIFF_COLORS[diff.level];
+      const startIdx = dateToIdx(barStart);
+      const endIdx   = dateToIdx(barEnd);
       if (startIdx < 0 && endIdx < 0) return null;
       const si = Math.max(0, startIdx < 0 ? 0 : startIdx);
       const ei = Math.min(totalDays - 1, endIdx < 0 ? totalDays - 1 : endIdx);
@@ -1576,20 +2654,18 @@ function renderCalendar() {
       const width = (ei - si + 1) * DAY_W - 2;
       const top   = ROW_PAD + lane * (BAR_H + BAR_GAP);
       return `<div class="quest-bar${isConf ? ' conflict-bar' : ''}"
+        data-qid="${q.id}" data-uid="${u.id}"
         style="left:${left}px;width:${width}px;top:${top}px;height:${BAR_H}px;
-               background:${color}22;border:1.5px solid ${color};color:${color};"
+               background:${color}22;border:1.5px solid ${color};color:${color};cursor:grab;"
+        onmousedown="startDrag(event,'${q.id}','${u.id}')"
         onmouseenter="showCalTooltip(event,'${q.id}')"
         onmouseleave="hideCalTooltip()"
-        onclick="switchView('assign');selectQuest('${q.id}')"
         title="${q.name}">
         <span class="quest-bar-name">${q.name}</span>
       </div>`;
     }).join('');
 
-    const todayLine = todayIdx >= 0
-      ? `<div class="today-line" style="left:${todayIdx * DAY_W + DAY_W/2}px"></div>` : '';
-
-    return `<div class="gantt-row${hasConf ? ' conflict-row' : ''}" style="min-height:${rowH}px;height:${rowH}px;">
+    return `<div class="gantt-row${hasConf ? ' conflict-row' : ''}" data-uid="${u.id}" style="min-height:${rowH}px;height:${rowH}px;">
       <div class="gantt-row-name" style="height:${rowH}px;">
         <div class="row-avatar" style="background:${rc}22;border-color:${rc}">${u.avatar}</div>
         <div class="row-name-text" title="${u.name}">${u.name}</div>
@@ -1597,53 +2673,91 @@ function renderCalendar() {
       </div>
       <div class="gantt-timeline" style="width:${totalW}px;position:relative;height:${rowH}px;">
         ${makeCells()}
-        ${todayLine}
         ${bars}
       </div>
     </div>`;
   }).join('');
 
-  // Quest summary rows (bottom section)
   const questRows = quests.map(q => {
+    normalizeAssigned(q);
     const diff = getDifficulty(q.amount);
-    const color = DIFF_COLORS[diff.level];
+    const color = q.color || DIFF_COLORS[diff.level];
     const startIdx = dateToIdx(q.start);
     const endIdx   = dateToIdx(q.end);
     const si = Math.max(0, startIdx < 0 ? 0 : startIdx);
     const ei = Math.min(totalDays - 1, endIdx < 0 ? totalDays-1 : endIdx);
-    const hasConf = q.assignedIds.some(uid => conflicts[uid]);
-    const todayLine = todayIdx >= 0
-      ? `<div class="today-line" style="left:${todayIdx * DAY_W + DAY_W/2}px"></div>` : '';
+    const hasConf = getAssignedUids(q).some(uid => conflicts[uid]);
 
     let barHtml = '';
     if (si <= ei && si < totalDays && startIdx >= 0) {
       const left = si * DAY_W;
       const width = (ei - si + 1) * DAY_W - 2;
-      barHtml = `<div class="quest-bar${hasConf?' conflict-bar':''}"
-        style="left:${left}px;width:${width}px;background:${color}33;border:1.5px solid ${color};color:${color};"
+
+      // Main quest bar (thin header)
+      const mainBar = `<div class="quest-bar${hasConf?' conflict-bar':''}"
+        style="position:absolute;left:${left}px;width:${width}px;top:4px;height:20px;
+               background:${color}22;border:1.5px solid ${color};color:${color};
+               font-size:10px;font-weight:600;letter-spacing:0.03em;"
         onmouseenter="showCalTooltip(event,'${q.id}')"
         onmouseleave="hideCalTooltip()"
-        onclick="switchView('assign');selectQuest('${q.id}')">
+        onclick="showQuestDetailPanel('${q.id}')">
         <span class="quest-bar-name">${q.name}（${q.assignedIds.length}名）</span>
       </div>`;
+
+      // Member bars — one row each, clearly labeled
+      const memberBars = q.assignedIds.map((a, idx) => {
+        const usi = Math.max(0, dateToIdx(a.start) < 0 ? 0 : dateToIdx(a.start));
+        const uei = Math.min(totalDays - 1, dateToIdx(a.end) < 0 ? totalDays - 1 : dateToIdx(a.end));
+        if (usi > uei) return '';
+        const u = units.find(x => x.id === a.uid);
+        const rc = rarityColor(u?.rarity || 1);
+        const uleft = usi * DAY_W;
+        const uwidth = (uei - usi + 1) * DAY_W - 2;
+        const top = 30 + idx * 26;
+        const isConf = conflicts[a.uid];
+        return `<div style="position:absolute;left:${uleft}px;width:${uwidth}px;top:${top}px;height:22px;
+          background:${rc}18;border:1px solid ${rc}88;border-radius:4px;
+          display:flex;align-items:center;gap:5px;padding:0 7px;
+          font-size:11px;color:${rc};overflow:hidden;white-space:nowrap;cursor:pointer;
+          ${isConf ? 'outline:1.5px solid var(--red);' : ''}"
+          onclick="showQuestDetailPanel('${q.id}')"
+          title="${u?.name||''}${a.start !== q.start || a.end !== q.end ? ` (${a.start}〜${a.end})` : ''}">
+          <span style="font-size:13px;flex-shrink:0;">${u?.avatar||'👤'}</span>
+          <span style="font-weight:500;overflow:hidden;text-overflow:ellipsis;">${u?.name||'不明'}</span>
+          ${a.start !== q.start || a.end !== q.end
+            ? `<span style="font-size:9px;opacity:0.7;margin-left:auto;flex-shrink:0;">${a.start.slice(5)}〜${a.end.slice(5)}</span>`
+            : ''}
+          ${isConf ? '<span style="margin-left:auto;font-size:10px;color:var(--red);flex-shrink:0;">⚠</span>' : ''}
+        </div>`;
+      }).join('');
+
+      const rowHeight2 = Math.max(40, 30 + q.assignedIds.length * 26 + 6);
+      barHtml = mainBar + memberBars;
     }
 
-    return `<div class="gantt-row${hasConf?' conflict-row':''}">
-      <div class="gantt-row-name" style="font-size:11px;">
-        <div style="width:8px;height:8px;border-radius:2px;background:${color};flex-shrink:0;"></div>
+    const rowHeight = Math.max(40, 30 + q.assignedIds.length * 26 + 6);
+    return `<div class="gantt-row${hasConf?' conflict-row':''}" style="min-height:${rowHeight}px;height:${rowHeight}px;align-items:flex-start;">
+      <div class="gantt-row-name" style="height:${rowHeight}px;align-items:flex-start;padding-top:8px;">
+        <div style="width:8px;height:8px;border-radius:2px;background:${color};flex-shrink:0;margin-top:4px;"></div>
         <div class="row-name-text" title="${q.name}">${q.name}</div>
         ${hasConf ? '<div class="row-conflict-icon">⚠</div>' : ''}
       </div>
-      <div class="gantt-timeline" style="width:${totalW}px;position:relative;">
+      <div class="gantt-timeline" style="width:${totalW}px;position:relative;height:${rowHeight}px;">
         ${makeCells()}
-        ${todayLine}
         ${barHtml}
       </div>
     </div>`;
   }).join('');
 
   const inner = `
-    <div style="min-width:${NAME_W + totalW}px">
+    <div style="min-width:${NAME_W + totalW}px;position:relative;">
+      <!-- Single TODAY line overlay -->
+      ${todayIdx >= 0 && todayIdx < totalDays ? `
+      <div style="position:absolute;left:${NAME_W + todayIdx * DAY_W + DAY_W/2}px;top:0;bottom:0;width:2px;
+        background:var(--accent);z-index:30;pointer-events:none;box-shadow:0 0 6px rgba(245,166,35,0.5);">
+        <div style="position:sticky;top:0;font-size:9px;font-weight:700;color:var(--accent);
+          letter-spacing:0.05em;white-space:nowrap;padding:4px 4px;background:var(--bg);">TODAY</div>
+      </div>` : ''}
       <!-- Month header -->
       <div class="gantt-header">
         <div class="gantt-name-col" style="width:${NAME_W}px">氏名 / 案件</div>
@@ -1659,7 +2773,7 @@ function renderCalendar() {
       <div class="gantt-section-header">
         <div class="gantt-section-label" style="width:${NAME_W}px">人材スケジュール</div>
         <div style="flex:1;background:var(--bg3);padding:6px 12px;font-size:10px;color:var(--text3);">
-          ← クリックでアサイン画面へ　　⚠ 赤枠 = スケジュール重複
+          ドラッグで移動　⚠ 赤枠 = スケジュール重複
         </div>
       </div>
       ${unitRows || '<div style="padding:16px 12px;font-size:12px;color:var(--text3);">表示する人材がいません</div>'}
@@ -1676,7 +2790,7 @@ function renderCalendar() {
   document.getElementById('gantt-inner').innerHTML = inner;
 
   // Scroll to today
-  if (todayIdx >= 0) {
+  if (todayIdx >= 0 && todayIdx < totalDays) {
     const wrapper = document.getElementById('gantt-wrapper');
     const scrollTo = NAME_W + todayIdx * DAY_W - wrapper.clientWidth / 2;
     wrapper.scrollLeft = Math.max(0, scrollTo);
@@ -1695,7 +2809,186 @@ function renderCalendar() {
   `;
 }
 
-// ── CALENDAR TOOLTIP ──
+// ── PARTIAL ASSIGN MODAL ──
+let paState = null; // { uid, questId }
+
+function openPartialAssignModal(uid, questId) {
+  const u = units.find(x => x.id === uid);
+  const q = quests.find(x => x.id === questId);
+  paState = { uid, questId };
+
+  document.getElementById('pa-title').textContent = `アサイン — ${u.name}`;
+  document.getElementById('pa-unit-info').innerHTML = `
+    <div class="unit-avatar r${u.rarity}" style="width:36px;height:36px;font-size:16px;border:2px solid ${rarityColor(u.rarity)};background:${rarityColor(u.rarity)}22;display:flex;align-items:center;justify-content:center;border-radius:50%;">${u.avatar}</div>
+    <div>
+      <div style="font-size:14px;font-weight:500;">${u.name}</div>
+      <div style="font-size:11px;color:var(--text2);">${RARITY_STARS[u.rarity]} ${RARITY_LABELS[u.rarity]} · ${u.skills.slice(0,2).join('・')}</div>
+    </div>
+  `;
+  document.getElementById('pa-start').value = q.start;
+  document.getElementById('pa-end').value = q.end;
+  document.getElementById('pa-start').min = q.start;
+  document.getElementById('pa-start').max = q.end;
+  document.getElementById('pa-end').min = q.start;
+  document.getElementById('pa-end').max = q.end;
+  document.getElementById('pa-period-note').textContent = `案件期間: ${q.start} 〜 ${q.end}`;
+  document.getElementById('partial-assign-modal').style.display = 'flex';
+}
+
+function setFullPeriod() {
+  const q = quests.find(x => x.id === paState?.questId);
+  if (!q) return;
+  document.getElementById('pa-start').value = q.start;
+  document.getElementById('pa-end').value = q.end;
+}
+
+function confirmPartialAssign() {
+  if (!paState) return;
+  const { uid, questId } = paState;
+  const q = quests.find(x => x.id === questId);
+  const u = units.find(x => x.id === uid);
+  const start = document.getElementById('pa-start').value;
+  const end = document.getElementById('pa-end').value;
+  if (!start || !end || start > end) { showToast('期間が正しくありません', 'error'); return; }
+  normalizeAssigned(q);
+  q.assignedIds.push({ uid, start, end });
+  const isConf = hasConflict(uid, questId);
+  const isPartial = start !== q.start || end !== q.end;
+  showToast(`${u.name} をアサインしました${isPartial ? '（部分）' : ''}${isConf ? ' ⚠ 期間重複あり' : ''}`, isConf ? 'error' : 'success');
+  document.getElementById('partial-assign-modal').style.display = 'none';
+  paState = null;
+  saveData(); render();
+}
+
+// ── QUEST DETAIL PANEL (calendar click) ──
+function showQuestDetailPanel(qid) {
+  const q = quests.find(x => x.id === qid);
+  if (!q) return;
+  normalizeAssigned(q);
+  const diff = getDifficulty(q.amount);
+  const conflicts = getUnitConflicts();
+
+  document.getElementById('qdp-title').textContent = q.name;
+  document.getElementById('qdp-meta').innerHTML = `
+    <div style="display:flex;flex-direction:column;gap:5px;">
+      <div style="font-size:11px;color:var(--text2);">📅 ${q.start} 〜 ${q.end}</div>
+      <div style="font-size:11px;color:var(--text2);">💴 ¥${Number(q.amount).toLocaleString()}円</div>
+      <div style="font-size:11px;color:${diff.color};">● ${diff.label} Lv.${diff.level}</div>
+    </div>
+  `;
+
+  const membersHtml = q.assignedIds.length === 0
+    ? '<div style="font-size:12px;color:var(--text3);padding:8px 0;">未アサイン</div>'
+    : q.assignedIds.map(a => {
+        const u = units.find(x => x.id === a.uid);
+        if (!u) return '';
+        const isConf = !!conflicts[a.uid];
+        const isPartial = a.start !== q.start || a.end !== q.end;
+        const rc = rarityColor(u.rarity);
+        return `<div style="display:flex;align-items:center;gap:10px;padding:8px 10px;background:var(--bg3);border-radius:8px;margin-bottom:6px;border:1px solid ${isConf ? 'var(--red)' : 'var(--border)'};">
+          <div style="width:34px;height:34px;border-radius:50%;background:${rc}22;border:2px solid ${rc};display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0;">${u.avatar}</div>
+          <div style="flex:1;min-width:0;">
+            <div style="font-size:13px;font-weight:500;color:var(--text);">${u.name} ${isConf ? '<span style="color:var(--red);font-size:10px;">⚠ 重複</span>' : ''}</div>
+            <div style="font-size:10px;color:${rc};">${RARITY_STARS[u.rarity]} ${RARITY_LABELS[u.rarity]}</div>
+            ${isPartial ? `<div style="font-size:10px;color:var(--blue);">部分: ${a.start}〜${a.end}</div>` : ''}
+          </div>
+        </div>`;
+      }).join('');
+
+  document.getElementById('qdp-members').innerHTML = membersHtml;
+  document.getElementById('quest-detail-panel').style.display = 'block';
+}
+
+function closeQuestDetailAndGoAssign() {
+  document.getElementById('quest-detail-panel').style.display = 'none';
+  // find which quest was shown
+  const title = document.getElementById('qdp-title').textContent;
+  const q = quests.find(x => x.name === title);
+  if (q) { switchView('assign'); selectQuest(q.id); }
+}
+
+
+function startDrag(e, questId, fromUnitId) {
+  e.preventDefault();
+  hideCalTooltip();
+  const q = quests.find(x => x.id === questId);
+  const diff = getDifficulty(q.amount);
+  const color = ['','#8b90a8','#3dd68c','#4a9eff','#c77dff','#f5a623'][diff.level];
+
+  const ghost = document.getElementById('drag-ghost');
+  ghost.textContent = q.name;
+  ghost.style.background = color + '33';
+  ghost.style.border = `1.5px solid ${color}`;
+  ghost.style.color = color;
+  ghost.style.display = 'block';
+  ghost.style.left = e.clientX + 12 + 'px';
+  ghost.style.top  = e.clientY - 14 + 'px';
+
+  dragState = { questId, fromUnitId };
+
+  document.addEventListener('mousemove', onDragMove);
+  document.addEventListener('mouseup', onDragEnd);
+}
+
+function onDragMove(e) {
+  if (!dragState) return;
+  const ghost = document.getElementById('drag-ghost');
+  ghost.style.left = e.clientX + 12 + 'px';
+  ghost.style.top  = e.clientY - 14 + 'px';
+
+  // Highlight target row
+  document.querySelectorAll('.gantt-row').forEach(r => r.classList.remove('drop-target'));
+  const target = getRowUnderCursor(e);
+  if (target && target.dataset.uid && target.dataset.uid !== dragState.fromUnitId) {
+    target.classList.add('drop-target');
+  }
+}
+
+function onDragEnd(e) {
+  document.removeEventListener('mousemove', onDragMove);
+  document.removeEventListener('mouseup', onDragEnd);
+
+  const ghost = document.getElementById('drag-ghost');
+  ghost.style.display = 'none';
+  document.querySelectorAll('.gantt-row').forEach(r => r.classList.remove('drop-target'));
+
+  if (!dragState) return;
+  const target = getRowUnderCursor(e);
+  const toUnitId = target?.dataset?.uid;
+
+  if (toUnitId && toUnitId !== dragState.fromUnitId) {
+    const q = quests.find(x => x.id === dragState.questId);
+    const toUnit = units.find(x => x.id === toUnitId);
+    const fromUnit = units.find(x => x.id === dragState.fromUnitId);
+    if (q && toUnit) {
+      normalizeAssigned(q);
+      const fromAssign = getAssignment(q, dragState.fromUnitId);
+      const assignPeriod = fromAssign ? { start: fromAssign.start, end: fromAssign.end } : { start: q.start, end: q.end };
+      q.assignedIds = q.assignedIds.filter(a => a.uid !== dragState.fromUnitId);
+      const diff = getDifficulty(q.amount);
+      const max = getRequiredHeadcount(diff);
+      if (!getAssignedUids(q).includes(toUnitId) && q.assignedIds.length < max) {
+        q.assignedIds.push({ uid: toUnitId, ...assignPeriod });
+        showToast(`${fromUnit?.name || '?'} → ${toUnit.name} に移動しました`, 'success');
+      } else if (getAssignedUids(q).includes(toUnitId)) {
+        showToast(`${toUnit.name} はすでにアサイン済みです`, 'error');
+        if (!getAssignedUids(q).includes(dragState.fromUnitId)) q.assignedIds.push({ uid: dragState.fromUnitId, ...assignPeriod });
+      } else {
+        showToast(`最大人数に達しています`, 'error');
+        if (!getAssignedUids(q).includes(dragState.fromUnitId)) q.assignedIds.push({ uid: dragState.fromUnitId, ...assignPeriod });
+      }
+      saveData(); renderCalendar(); render();
+    }
+  }
+  dragState = null;
+}
+
+function getRowUnderCursor(e) {
+  const els = document.elementsFromPoint(e.clientX, e.clientY);
+  return els.find(el => el.classList?.contains('gantt-row') && el.dataset?.uid);
+}
+
+
 function showCalTooltip(e, qid) {
   const q = quests.find(x => x.id === qid);
   if (!q) return;
@@ -1735,9 +3028,267 @@ document.addEventListener('mousemove', e => {
   if (tt && tt.style.display !== 'none') positionTooltip(e, tt);
 });
 
+// ── STATUS VIEW ──
+let statusSelectedUid = null;
+
+function renderStatusView() {
+  const searchVal = (document.getElementById('status-search')?.value || '').toLowerCase();
+  const sortKey = document.getElementById('status-sort')?.value || 'level';
+
+  let sorted = units.map(u => ({ u, lv: getUnitTotalLevel(u), xp: u.totalXp || 0 }));
+  if (searchVal) sorted = sorted.filter(x => x.u.name.toLowerCase().includes(searchVal));
+  sorted.sort((a, b) => {
+    if (sortKey === 'level')  return b.lv - a.lv;
+    if (sortKey === 'xp')     return b.xp - a.xp;
+    if (sortKey === 'name')   return a.u.name.localeCompare(b.u.name, 'ja');
+    if (sortKey === 'rarity') return b.u.rarity - a.u.rarity;
+    return 0;
+  });
+
+  const listEl = document.getElementById('status-unit-list');
+  // ── BUG FIX: use data-uid attribute for identity, never text content matching ──
+  listEl.innerHTML = sorted.map(({ u, lv }) => {
+    const specialty = getSpecialtyBadge(u);
+    const rc = rarityColor(u.rarity);
+    const isActive = statusSelectedUid === u.id;
+    return `<div class="status-unit-item${isActive ? ' active' : ''}"
+        data-uid="${u.id}"
+        onclick="openStatusDetail('${u.id}')">
+      <div style="width:36px;height:36px;border-radius:50%;background:${rc}22;border:2px solid ${rc};
+           display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0;">${u.avatar}</div>
+      <div style="flex:1;min-width:0;">
+        <div style="font-size:12px;font-weight:500;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${u.name}</div>
+        <div style="font-size:10px;color:${rc};">${RARITY_STARS[u.rarity]} ${RARITY_LABELS[u.rarity]}</div>
+        ${specialty ? `<div style="font-size:9px;color:var(--purple);">${specialty.label}</div>` : ''}
+      </div>
+      <div class="status-lv-ring">Lv<br>${lv}</div>
+    </div>`;
+  }).join('') || '<div style="padding:16px;text-align:center;font-size:12px;color:var(--text3);">該当なし</div>';
+
+  if (statusSelectedUid) openStatusDetail(statusSelectedUid);
+}
+
+function openStatusDetail(uid) {
+  // ── BUG FIX: update active state using data-uid, never text matching ──
+  statusSelectedUid = uid;
+  document.querySelectorAll('#status-unit-list .status-unit-item').forEach(el => {
+    el.classList.toggle('active', el.dataset.uid === uid);
+  });
+
+  const u = units.find(x => x.id === uid);
+  if (!u) return;
+  normalizeUnit(u);
+
+  const rc = rarityColor(u.rarity);
+  const totalLv = getUnitTotalLevel(u);
+  const specialty = getSpecialtyBadge(u);
+  const levels = getUnitCatLevels(u);
+  const pastQs = getUnitPastQuests(uid);
+  const totalXp = u.totalXp || 0;
+  const badges = getAllBadges(u);
+
+  // Radar chart
+  const radarSvg = buildRadarChart(levels, 190);
+
+  // Category bars + admin controls (±100, ±1K, direct input)
+  const catRows = CAT_KEYS.map(k => {
+    const cat = CATEGORIES[k];
+    const lv = levels[k];
+    const xpData = u.xp[k];
+    const progress = catLevelProgress(xpData.exp, xpData.quests);
+    const nextLv = lv + 1;
+    const nextExp = lv < MAX_CAT_LEVEL ? totalExpForLevel(nextLv) : null;
+    const hue = ['factory','hospital','hotel'].includes(k) ? 'var(--blue)' :
+                ['warehouse','school'].includes(k) ? 'var(--green)' :
+                ['elderly','government'].includes(k) ? 'var(--purple)' : 'var(--accent)';
+    const lvCaption = lv >= MAX_CAT_LEVEL
+      ? `<span style="color:var(--rarity5);font-weight:700;">MAX</span>`
+      : `Lv.${lv} <span style="font-size:9px;color:var(--text3);">→${nextLv}</span>`;
+    return `<div class="cat-bar-row" style="align-items:center;">
+      <div class="cat-bar-label">${cat.icon} ${cat.label}</div>
+      <div style="flex:1;">
+        <div class="cat-bar-track">
+          <div class="cat-bar-fill" style="width:${Math.round(progress*100)}%;background:${hue};"></div>
+        </div>
+        <div style="font-size:9px;color:var(--text3);margin-top:1px;text-align:right;">
+          ${xpData.exp.toLocaleString()} EXP / Q:${xpData.quests}
+          ${nextExp !== null ? ` (次Lv: ${nextExp.toLocaleString()})` : ''}
+        </div>
+      </div>
+      <div class="cat-lv-label" style="text-align:center;">${lvCaption}</div>
+      <div style="display:flex;align-items:center;gap:3px;flex-shrink:0;">
+        <button class="xp-adj-btn" onclick="adminAdjustXp('${uid}','${k}',-1000)" title="-1000EXP" style="font-size:9px;width:28px;">-1K</button>
+        <button class="xp-adj-btn" onclick="adminAdjustXp('${uid}','${k}',-100)" title="-100EXP">−</button>
+        <input type="number" min="0"
+          value="${xpData.exp}"
+          onchange="setXpDirect('${uid}','${k}',this)"
+          style="width:64px;background:var(--bg3);border:1px solid var(--border2);border-radius:4px;
+                 padding:3px 5px;font-size:11px;color:var(--text);font-family:'Noto Sans JP',sans-serif;text-align:center;"
+          title="EXPを直接入力">
+        <button class="xp-adj-btn" onclick="adminAdjustXp('${uid}','${k}',100)" title="+100EXP">＋</button>
+        <button class="xp-adj-btn" onclick="adminAdjustXp('${uid}','${k}',1000)" title="+1000EXP" style="font-size:9px;width:28px;">+1K</button>
+      </div>
+    </div>`;
+  }).join('');
+
+  // Badge area
+  const badgeHtml = badges.length === 0
+    ? '<div style="font-size:12px;color:var(--text3);padding:8px 0;">まだ称号がありません。案件をこなしてEXPを積みましょう。</div>'
+    : badges.map(b => `
+      <div title="${b.desc}" style="display:flex;align-items:center;gap:6px;padding:6px 10px;
+           background:var(--bg3);border:1px solid var(--border);border-radius:6px;cursor:default;
+           transition:border-color 0.15s;" onmouseenter="this.style.borderColor='${b.color}'" onmouseleave="this.style.borderColor='var(--border)'">
+        <span style="font-size:18px;flex-shrink:0;">${b.icon}</span>
+        <div>
+          <div style="font-size:11px;font-weight:600;color:${b.color};">${b.label}</div>
+          <div style="font-size:9px;color:var(--text3);">${b.desc}</div>
+        </div>
+      </div>`).join('');
+
+  // Timeline
+  const timeline = pastQs.length === 0
+    ? '<div style="font-size:12px;color:var(--text3);padding:12px 0;">案件履歴なし</div>'
+    : pastQs.slice().reverse().map(q => {
+        const diff = getDifficulty(q.amount);
+        const cat = CATEGORIES[q.category] || CATEGORIES.other;
+        const exp = RANK_EXP[diff.level] || 0;
+        return `<div class="timeline-item">
+          <div class="timeline-dot" style="background:${diff.color};margin-top:6px;"></div>
+          <div style="flex:1;">
+            <div style="font-size:12px;font-weight:500;color:var(--text);">${q.name}</div>
+            <div style="font-size:10px;color:var(--text2);margin-top:2px;">${q.start} 〜 ${q.end} ／ ${cat.icon}${cat.label}</div>
+            <div style="font-size:10px;margin-top:2px;display:flex;gap:8px;">
+              <span style="color:${diff.color};">${diff.label}</span>
+              <span style="color:var(--accent);">+${exp.toLocaleString()} EXP</span>
+            </div>
+          </div>
+        </div>`;
+      }).join('');
+
+  document.getElementById('status-detail').innerHTML = `
+    <div style="max-width:900px;">
+      <!-- Header -->
+      <div style="display:flex;align-items:center;gap:16px;margin-bottom:20px;padding-bottom:16px;border-bottom:1px solid var(--border);">
+        <div style="width:60px;height:60px;border-radius:50%;background:${rc}22;border:3px solid ${rc};
+             display:flex;align-items:center;justify-content:center;font-size:28px;flex-shrink:0;">${u.avatar}</div>
+        <div style="flex:1;">
+          <div style="font-family:'Oswald',sans-serif;font-size:22px;font-weight:600;">${u.name}</div>
+          <div style="font-size:12px;color:${rc};margin-top:2px;">${RARITY_STARS[u.rarity]} ${RARITY_LABELS[u.rarity]}  ·  ${AFFINITY_LABELS[u.affinity]}属性${u.birthdate ? ' · '+calcAge(u.birthdate)+'歳' : ''}${u.joindate ? ' · 勤続'+calcTenure(u.joindate) : ''}</div>
+          ${specialty ? `<div style="margin-top:6px;"><span style="font-size:11px;background:rgba(155,89,255,0.15);color:var(--purple);border:1px solid rgba(155,89,255,0.35);border-radius:4px;padding:2px 10px;">${specialty.label}</span></div>` : ''}
+        </div>
+        <div style="text-align:center;flex-shrink:0;">
+          <div style="font-family:'Oswald',sans-serif;font-size:42px;font-weight:600;color:var(--accent);line-height:1;">Lv.${totalLv}</div>
+          <div style="font-size:11px;color:var(--text2);">総合レベル</div>
+          <div style="font-size:12px;color:var(--accent);margin-top:4px;">${totalXp.toLocaleString()} EXP</div>
+          <div style="font-size:10px;color:var(--text3);">${pastQs.length}件完了 ／ 称号${badges.length}個</div>
+        </div>
+      </div>
+
+      <!-- Section 1: radar + badge wall -->
+      <div style="display:grid;grid-template-columns:210px 1fr;gap:20px;margin-bottom:24px;">
+        <div>
+          <div style="font-size:11px;font-weight:500;color:var(--text2);letter-spacing:0.06em;text-transform:uppercase;margin-bottom:8px;">物件種別 熟練度</div>
+          ${radarSvg}
+        </div>
+        <div>
+          <div style="font-size:11px;font-weight:500;color:var(--text2);letter-spacing:0.06em;text-transform:uppercase;margin-bottom:8px;">獲得称号 (${badges.length}個)</div>
+          <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:6px;">
+            ${badgeHtml}
+          </div>
+        </div>
+      </div>
+
+      <!-- Section 2: EXP管理 -->
+      <div style="margin-bottom:24px;">
+        <div style="font-size:11px;font-weight:500;color:var(--text2);letter-spacing:0.06em;text-transform:uppercase;margin-bottom:10px;">EXP / Lv 管理（管理者）<span style="font-size:10px;color:var(--text3);margin-left:8px;text-transform:none;letter-spacing:0;">数値を直接入力またはボタンで増減 · MAX Lv.${MAX_CAT_LEVEL}</span></div>
+        ${catRows}
+      </div>
+
+      <!-- Section 3: Timeline -->
+      <div style="font-size:11px;font-weight:500;color:var(--text2);letter-spacing:0.06em;text-transform:uppercase;margin-bottom:10px;">案件履歴タイムライン</div>
+      <div>${timeline}</div>
+    </div>
+  `;
+}
+
+function buildRadarChart(levels, size) {
+  const keys = CAT_KEYS;
+  const n = keys.length;
+  const cx = size / 2, cy = size / 2;
+  const maxR = size / 2 - 24;
+  const maxLv = MAX_CAT_LEVEL; // radar max = 30
+
+  function polar(angle, r) {
+    return [
+      cx + r * Math.sin(angle),
+      cy - r * Math.cos(angle)
+    ];
+  }
+
+  // Grid circles
+  let gridLines = '';
+  [0.25, 0.5, 0.75, 1].forEach(f => {
+    const pts = keys.map((_, i) => polar(2 * Math.PI * i / n, maxR * f));
+    gridLines += `<polygon points="${pts.map(p=>p.join(',')).join(' ')}" fill="none" stroke="rgba(255,255,255,0.07)" stroke-width="1"/>`;
+  });
+
+  // Axis lines + labels
+  let axes = '';
+  keys.forEach((k, i) => {
+    const angle = 2 * Math.PI * i / n;
+    const [lx, ly] = polar(angle, maxR);
+    const [tx, ty] = polar(angle, maxR + 14);
+    const cat = CATEGORIES[k];
+    axes += `<line x1="${cx}" y1="${cy}" x2="${lx}" y2="${ly}" stroke="rgba(255,255,255,0.1)" stroke-width="1"/>`;
+    axes += `<text x="${tx}" y="${ty}" text-anchor="middle" dominant-baseline="middle" font-size="9" fill="#8b90a8" font-family="Noto Sans JP,sans-serif">${cat.icon}</text>`;
+  });
+
+  // Data polygon
+  const pts = keys.map((k, i) => {
+    const lv = Math.min(levels[k] || 0, maxLv);
+    return polar(2 * Math.PI * i / n, maxR * (lv / maxLv));
+  });
+  const polyPts = pts.map(p => p.join(',')).join(' ');
+  const dataPolygon = `<polygon points="${polyPts}" fill="rgba(245,166,35,0.15)" stroke="var(--accent)" stroke-width="1.5"/>`;
+  const dots = pts.map((p, i) => {
+    const lv = levels[CAT_KEYS[i]] || 0;
+    return lv > 0 ? `<circle cx="${p[0]}" cy="${p[1]}" r="3" fill="var(--accent)"/>` : '';
+  }).join('');
+
+  return `<svg class="radar-canvas" width="${size}" height="${size}" viewBox="0 0 ${size} ${size}">
+    ${gridLines}${axes}${dataPolygon}${dots}
+  </svg>`;
+}
+
+// ── PASSWORD ──
+const PW_HASH = '7a3f8c2e1b4d6f9e0a5c8b2d4f7e1a3c9b6d2f5e8a1c4b7d0e3f6a9c2b5e8d1f'; // not real hash, use simple check
+function checkPassword() {
+  const val = document.getElementById('pw-input').value;
+  if (val === 'Gunei6521') {
+    sessionStorage.setItem('kq_auth', '1');
+    document.getElementById('pw-screen').style.display = 'none';
+    document.getElementById('main-app').style.display = '';
+    loadData();
+  } else {
+    const err = document.getElementById('pw-error');
+    err.textContent = 'パスワードが違います';
+    document.getElementById('pw-input').value = '';
+    document.getElementById('pw-input').focus();
+    setTimeout(() => err.textContent = '', 2500);
+  }
+}
+
 // ── BOOT ──
-loadData();
+if (sessionStorage.getItem('kq_auth') === '1') {
+  document.getElementById('pw-screen').style.display = 'none';
+  document.getElementById('main-app').style.display = '';
+  loadData();
+} else {
+  setTimeout(() => document.getElementById('pw-input').focus(), 100);
+}
 </script>
 <div class="cal-tooltip" id="cal-tooltip" style="display:none"></div>
+</div>
 </body>
 </html>
+
