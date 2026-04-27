@@ -2,6 +2,7 @@
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🏗️</text></svg>">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>現場クエスト — 工事アサインシステム</title>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&family=Oswald:wght@400;600&display=swap" rel="stylesheet">
@@ -295,11 +296,9 @@ header {
   background-size: 200% auto;
 }
 @media print {
-  body > *:not(#print-overlay) { display: none !important; }
-  #print-overlay { display: block !important; position: static !important; background: white !important; color: black !important; }
+  body > *:not(#share-overlay):not(#print-overlay) { display: none !important; }
+  #share-overlay, #print-overlay { display: block !important; position: static !important; }
   .print-no { display: none !important; }
-  .print-card { break-inside: avoid; border: 1px solid #ccc !important; color: black !important; background: white !important; }
-  .print-card * { color: black !important; }
 }
   0%   { background-position: 0% center; }
   100% { background-position: 200% center; }
@@ -521,13 +520,24 @@ header {
 
 .gantt-row {
   display: flex;
-  border-bottom: 1px solid var(--border);
+  border-bottom: 1px solid var(--border2); /* 区切りを濃く */
   min-height: 52px;
   position: relative;
   transition: background 0.1s;
 }
-.gantt-row:hover { background: rgba(255,255,255,0.025); }
+.gantt-row:hover { background: rgba(255,255,255,0.04); }
 .gantt-row.conflict-row { background: rgba(255,85,85,0.05); }
+/* 案件期間ハイライトオーバーレイ：青 */
+.quest-period-highlight {
+  position: absolute;
+  top: 0; bottom: 0;
+  background: rgba(74,158,255,0.10);
+  border-left: 2px solid rgba(74,158,255,0.7);
+  border-right: 2px solid rgba(74,158,255,0.7);
+  pointer-events: none;
+  z-index: 4;
+  transition: opacity 0.2s;
+}
 
 .gantt-row-name {
   width: 200px; flex-shrink: 0;
@@ -797,6 +807,21 @@ header {
       </div>
     </div>
     <div id="print-content" style="color:#111;"></div>
+  </div>
+</div>
+
+<!-- Share View Overlay -->
+<div id="share-overlay" style="display:none;position:fixed;inset:0;background:white;z-index:500;overflow-y:auto;font-family:'Noto Sans JP',sans-serif;color:#111;">
+  <div style="max-width:1200px;margin:0 auto;padding:20px;">
+    <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px;">
+      <div style="font-size:18px;font-weight:700;color:#111;">工事アサイン — 案件工程表</div>
+      <div id="share-period-label" style="font-size:13px;color:#555;"></div>
+      <div style="margin-left:auto;display:flex;gap:8px;">
+        <button onclick="window.print()" style="padding:7px 18px;background:#1a6fb5;border:none;border-radius:6px;color:white;font-weight:700;cursor:pointer;font-size:13px;font-family:'Noto Sans JP',sans-serif;">🖨 印刷</button>
+        <button onclick="closeShareView()" style="padding:7px 14px;background:#eee;border:none;border-radius:6px;color:#333;cursor:pointer;font-size:13px;font-family:'Noto Sans JP',sans-serif;">✕ 閉じる</button>
+      </div>
+    </div>
+    <div id="share-content" style="overflow-x:auto;"></div>
   </div>
 </div>
 
@@ -1156,6 +1181,11 @@ header {
       <div class="cal-filter-chip" id="filter-conflict"        onclick="setFilter('conflict',this)">⚠ 重複</div>
       <div class="cal-filter-chip" id="filter-free"            onclick="setFilter('free',this)">🟢 空き</div>
     </div>
+    <!-- 案件表示モード -->
+    <div style="display:flex;gap:4px;margin-left:8px;padding-left:8px;border-left:1px solid var(--border);">
+      <button id="quest-mode-normal"   onclick="setQuestDisplayMode('normal',this)"   class="cal-filter-chip active">通常</button>
+      <button id="quest-mode-proposal" onclick="setQuestDisplayMode('proposal',this)" class="cal-filter-chip" style="color:#8b90a8;">📝 提案中</button>
+    </div>
     <div class="cal-legend" style="margin-left:auto;">
       <div class="legend-item"><div class="legend-dot" style="background:var(--rarity1)"></div>EASY</div>
       <div class="legend-item"><div class="legend-dot" style="background:var(--rarity2)"></div>NORMAL</div>
@@ -1165,6 +1195,7 @@ header {
       <div class="legend-item"><div class="legend-dot" style="background:var(--red)"></div>LEGEND</div>
       <div class="legend-item"><div class="legend-dot" style="background:var(--red);outline:1.5px solid var(--red);outline-offset:1px;"></div>重複</div>
     </div>
+    <button onclick="openShareView()" style="margin-left:8px;padding:5px 12px;background:var(--bg3);border:1px solid var(--border2);border-radius:6px;color:var(--text2);font-size:11px;cursor:pointer;font-family:'Noto Sans JP',sans-serif;white-space:nowrap;flex-shrink:0;">📤 共有用</button>
   </div>
   <div class="gantt-wrapper" id="gantt-wrapper">
     <div id="gantt-inner"></div>
@@ -2836,11 +2867,18 @@ function renderAssignBoard(qid) {
           </select>
         </div>
         ${isConf ? '<span class="slot-conflict-icon">⚠</span>' : ''}
-        <div class="slot-avatar" style="border-color:${rarityColor(u.rarity)};background:${rarityColor(u.rarity)}22;margin-top:22px;">${u.avatar}</div>
-        <div class="slot-unit-name">${u.name}</div>
-        <div class="slot-unit-role" style="color:${rarityColor(u.rarity)}">${isLR(u.rarity)?`<span class="lr-text">${RARITY_STARS[u.rarity]}</span>`:RARITY_STARS[u.rarity]} Lv.${getUnitTotalLevel(u)}</div>
-        ${isJuniorNG(u) ? '<div style="font-size:9px;color:var(--red);background:rgba(255,85,85,0.1);border-radius:3px;padding:1px 4px;margin-top:2px;">🚫若手NG</div>' : ''}
-        ${isPartial ? `<div style="font-size:9px;color:var(--blue);margin-top:3px;">${entry.start}〜${entry.end}</div>` : ''}
+        <div class="slot-avatar" style="border-color:${u.isTemp ? '#8b90a8' : rarityColor(u.rarity)};background:${u.isTemp ? 'rgba(139,144,168,0.1)' : rarityColor(u.rarity)+'22'};margin-top:22px;${u.isTemp ? 'border-style:dashed;' : ''}">${u.avatar}</div>
+        <div class="slot-unit-name" style="${u.isTemp ? 'color:var(--text3);' : ''}">${u.name}</div>
+        ${u.isTemp
+          ? `<div style="font-size:9px;color:#8b90a8;margin-top:2px;">仮置き</div>
+             <button onclick="event.stopPropagation();removeTempUnit('${qid}','${uid}')"
+               style="font-size:9px;padding:2px 6px;margin-top:4px;background:rgba(255,85,85,0.1);
+                 border:1px solid rgba(255,85,85,0.3);border-radius:4px;color:var(--red);
+                 cursor:pointer;font-family:'Noto Sans JP',sans-serif;">✕ 削除</button>`
+          : `<div class="slot-unit-role" style="color:${rarityColor(u.rarity)}">${isLR(u.rarity)?`<span class="lr-text">${RARITY_STARS[u.rarity]}</span>`:RARITY_STARS[u.rarity]} Lv.${getUnitTotalLevel(u)}</div>
+             ${isJuniorNG(u) ? '<div style="font-size:9px;color:var(--red);background:rgba(255,85,85,0.1);border-radius:3px;padding:1px 4px;margin-top:2px;">🚫若手NG</div>' : ''}
+             ${isPartial ? `<div style="font-size:9px;color:var(--blue);margin-top:3px;">${entry.start}〜${entry.end}</div>` : ''}`
+        }
       </div>`;
     }
 
@@ -2862,11 +2900,18 @@ function renderAssignBoard(qid) {
       ondragover="event.preventDefault();this.classList.add('slot-drop-hover')"
       ondragleave="this.classList.remove('slot-drop-hover')"
       ondrop="slotDropEmpty(event,'${qid}','${targetRole}')"
-      onclick="showRosterHint()"
-      style="border-color:${borderColor};border-style:dashed;">
+      style="border-color:${borderColor};border-style:dashed;position:relative;">
       ${labelHtml}
       <div style="font-size:24px;color:${plusColor};opacity:0.5;">＋</div>
       <div class="empty-label">ここにドロップ</div>
+      <button onclick="event.stopPropagation();addTempUnit('${qid}','${targetRole}')"
+        title="仮枠（派遣）を追加"
+        style="position:absolute;bottom:6px;left:50%;transform:translateX(-50%);
+          font-size:9px;padding:2px 8px;background:rgba(139,144,168,0.15);
+          border:1px solid rgba(139,144,168,0.3);border-radius:4px;color:#8b90a8;
+          cursor:pointer;white-space:nowrap;font-family:'Noto Sans JP',sans-serif;">
+        派遣を仮置き
+      </button>
     </div>`;
   }).join('');
 
@@ -3941,6 +3986,7 @@ let calStartMonth = new Date().getMonth(); // 0-indexed
 let calEndYear    = new Date().getFullYear();
 let calEndMonth   = new Date().getMonth() + 11;
 let calViewMode   = 'day'; // 'day' | 'decade' | 'month'
+let questDisplayMode = 'normal'; // 'normal' | 'proposal'
 
 // 終了月の正規化
 function normalizeCalEnd() {
@@ -4050,6 +4096,16 @@ function setCalSpanCustom(btn) {
   if (eEl && !eEl.value) eEl.value = fmt(new Date(calEndYear, calEndMonth, 1));
   const cr = document.getElementById('cal-custom-row');
   if (cr) cr.style.display = 'flex';
+  renderCalendar();
+}
+
+function setQuestDisplayMode(mode, btn) {
+  questDisplayMode = mode;
+  document.querySelectorAll('[id^="quest-mode-"]').forEach(b => {
+    b.classList.remove('active');
+    b.style.color = '';
+  });
+  btn.classList.add('active');
   renderCalendar();
 }
 
@@ -4172,10 +4228,46 @@ function renderCalendar() {
   if (calFilter === 'free')      displayUnits = displayUnits.filter(u => !conflicts[u.id] && quests.some(q => getAssignedUids(q).includes(u.id)));
   if (calFilter === 'assigned')  displayUnits = displayUnits.filter(u => quests.some(q => getAssignedUids(q).includes(u.id)));
 
-  // ── HTML BUILD ──
-  const DIFF_COLORS = {
-    1: '#8b90a8', 2: '#3dd68c', 3: '#4a9eff', 4: '#c77dff', 5: '#f5a623', 6: '#ff5555'
-  };
+  // ── 稼働率ヒートマップ行 ──
+  const DIFF_COLORS = { 1:'#8b90a8',2:'#3dd68c',3:'#4a9eff',4:'#c77dff',5:'#f5a623',6:'#ff5555' };
+  const totalEmployees = units.filter(u => !u.isExternal).length;
+  const heatmapCells = cells.map((c, i) => {
+    if (totalEmployees === 0) return `<div style="width:${CELL_W}px;height:100%;border-left:1px solid var(--border);"></div>`;
+    // このセル期間に稼働している社員数を計算
+    const midDate = new Date((c.start.getTime() + c.end.getTime()) / 2);
+    const activeCount = units.filter(u => {
+      if (u.isExternal) return false;
+      return quests.some(q => {
+        const uids = getAssignedUids(q);
+        if (!uids.includes(u.id)) return false;
+        const a = getAssignment(q, u.id);
+        const as = new Date(a?.start || q.start);
+        const ae = new Date(a?.end   || q.end);
+        return as <= midDate && ae >= midDate;
+      });
+    }).length;
+    const pct = Math.round(activeCount / totalEmployees * 100);
+    const barColor = pct >= 80 ? '#ff5555' : pct >= 60 ? '#f5a623' : pct >= 40 ? '#3dd68c' : '#4a9eff';
+    const bdr = c.isMonthStart ? `border-left:2px solid var(--border2);` : `border-left:1px solid var(--border);`;
+    return `<div style="width:${CELL_W}px;height:100%;${bdr}position:relative;cursor:default;"
+      title="稼働${activeCount}名/${totalEmployees}名（${pct}%）">
+      <div style="position:absolute;bottom:0;left:1px;right:1px;height:${Math.max(2,pct/2)}%;
+        background:${barColor};opacity:0.7;border-radius:2px 2px 0 0;transition:height 0.3s;"></div>
+      <div style="position:absolute;bottom:2px;left:0;right:0;text-align:center;font-size:8px;color:${barColor};font-weight:600;line-height:1;">${pct}%</div>
+    </div>`;
+  }).join('');
+
+  const heatmapRow = `<div style="display:flex;border-bottom:2px solid var(--border2);background:var(--bg3);">
+    <div style="width:${NAME_W}px;flex-shrink:0;padding:0 14px;display:flex;align-items:center;gap:6px;
+      border-right:2px solid var(--border2);position:sticky;left:0;background:var(--bg3);z-index:30;
+      box-shadow:2px 0 8px rgba(0,0,0,0.4);">
+      <div style="font-size:10px;font-weight:600;color:var(--text2);">📊 稼働率</div>
+      <div style="font-size:9px;color:var(--text3);">全${totalEmployees}名</div>
+    </div>
+    <div style="display:flex;height:40px;width:${totalW}px;flex-shrink:0;overflow:hidden;">
+      ${heatmapCells}
+    </div>
+  </div>`;
   // 月ラベル行（旬/月モードは年ラベル行）
   let topHeaderCells = '';
   let bottomHeaderCells = '';
@@ -4340,83 +4432,103 @@ function renderCalendar() {
     </div>`;
   }).join('');
 
-  const questRows = quests.map(q => {
+  const questRows = quests.map((q, qIdx) => {
     normalizeAssigned(q);
     const diff  = getDifficulty(q.amount);
-    const color = q.color || DIFF_COLORS[diff.level];
+    const st    = getQuestStatus(q);
+
+    // 提案中フォーカスモード：完工は非表示
+    if (questDisplayMode === 'proposal' && st === 'completed') return '';
+
     const startIdx = dateToIdx(q.start);
     const endIdx   = dateToIdx(q.end);
-    const si = Math.max(0, startIdx < 0 ? 0 : startIdx);
-    const ei = Math.min(totalCells - 1, endIdx < 0 ? totalCells - 1 : endIdx);
+    if (endIdx < 0 || startIdx >= totalCells) return '';
+    const si = Math.max(0, startIdx);
+    const ei = Math.min(totalCells - 1, endIdx);
+    if (si > ei) return '';
+
+    // 提案中フォーカスモード：受注案件はグレーアウト
+    const isGrayedOut = questDisplayMode === 'proposal' && st !== 'proposal';
+    const color = isGrayedOut ? '#666' : (q.color || DIFF_COLORS[diff.level]);
+    const rowOpacity = isGrayedOut ? 0.3 : 1;
+
+    const clippedLeft  = startIdx < 0;
+    const clippedRight = endIdx >= totalCells;
     const hasConf = getAssignedUids(q).some(uid => conflicts[uid]);
-    const st = getQuestStatus(q);
     const assignedUnits = q.assignedIds.map(a => units.find(x => x.id === a.uid)).filter(Boolean);
     const memberAvatars = assignedUnits.slice(0, 5).map(u => u.avatar).join('');
-    const memberNames   = assignedUnits.map(u => u.name).join('・') || '未アサイン';
 
     const ROW_H = 52;
-    let barHtml = '';
+    const isProposalFocus = questDisplayMode === 'proposal' && st === 'proposal';
+    const left  = si * CELL_W;
+    const width = (ei - si + 1) * CELL_W - 2;
+    const barBorderW = isProposalFocus ? '2.5px' : '1.5px';
+    const barBg      = isProposalFocus ? color + '44' : color + '22';
+    const borderL = clippedLeft  ? 'none' : `${barBorderW} solid ${color}`;
+    const borderR = clippedRight ? 'none' : `${barBorderW} solid ${color}`;
+    const prefix  = clippedLeft  ? `<span style="margin-right:3px;opacity:0.7;">◀</span>` : '';
+    const suffix  = clippedRight ? `<span style="margin-left:3px;opacity:0.7;">▶</span>` : '';
+    const radiusL = clippedLeft  ? '0' : '4px';
+    const radiusR = clippedRight ? '0' : '4px';
 
-    if (si <= ei && si < totalCells && startIdx >= 0) {
-      const left  = si * CELL_W;
-      const width = (ei - si + 1) * CELL_W - 2;
+    const barHtml = `<div class="quest-bar${hasConf?' conflict-bar':''} status-${st}"
+      data-qid="${q.id}"
+      style="position:absolute;left:${left}px;width:${width}px;top:8px;height:34px;
+             background:${barBg};
+             border-top:${barBorderW} solid ${color};border-bottom:${barBorderW} solid ${color};
+             border-left:${borderL};border-right:${borderR};
+             border-radius:${radiusL} ${radiusR} ${radiusR} ${radiusL};
+             color:${color};font-size:11px;font-weight:600;cursor:pointer;user-select:none;
+             display:flex;align-items:center;padding:0 8px;overflow:hidden;white-space:nowrap;
+             ${isProposalFocus ? 'box-shadow:0 0 8px '+color+'66;' : ''}"
+      onmouseenter="showQuestCalTooltip(event,'${q.id}')"
+      onmouseleave="hideCalTooltip()"
+      onclick="toggleQuestMemberBar('${q.id}')">
+      ${prefix}<span style="letter-spacing:-1px;margin-right:4px;flex-shrink:0;">${memberAvatars||'👤'}</span>
+      <span style="overflow:hidden;text-overflow:ellipsis;flex:1;">${q.name}</span>
+      <span style="margin-left:auto;flex-shrink:0;opacity:0.7;font-size:9px;padding-left:4px;">${q.assignedIds.length}名</span>${suffix}
+    </div>
 
-      // 1本のメインバー
-      barHtml = `<div class="quest-bar${hasConf ? ' conflict-bar' : ''} status-${st}"
-        data-qid="${q.id}"
-        style="position:absolute;left:${left}px;width:${width}px;top:4px;height:24px;
-               background:${color}22;border:1.5px solid ${color};color:${color};
-               font-size:10px;font-weight:600;cursor:pointer;user-select:none;"
-        onmouseenter="showQuestCalTooltip(event,'${q.id}')"
-        onmouseleave="hideCalTooltip()"
-        onclick="toggleQuestMemberBar('${q.id}')">
-        <span style="flex-shrink:0;letter-spacing:-1px;margin-right:4px;">${memberAvatars||'👤'}</span>
-        <span class="quest-bar-name">${q.name}</span>
-        <span style="margin-left:auto;flex-shrink:0;opacity:0.7;font-size:9px;">${q.assignedIds.length}名</span>
+    <div id="qmbar-${q.id}" style="display:none;position:absolute;left:${left}px;top:46px;min-width:200px;max-width:${width}px;
+      background:var(--bg2);border:1px solid ${color}55;border-radius:6px;
+      box-shadow:0 4px 16px rgba(0,0,0,0.5);z-index:100;padding:6px;">
+      ${q.assignedIds.length === 0
+        ? `<div style="font-size:11px;color:var(--text3);padding:4px 6px;">未アサイン</div>`
+        : q.assignedIds.map(a => {
+            const u = units.find(x => x.id === a.uid);
+            if (!u) return '';
+            const rc = rarityColor(u.rarity);
+            const isConf = conflicts[a.uid];
+            return `<div style="display:flex;align-items:center;gap:6px;padding:4px 6px;border-radius:4px;
+              margin-bottom:3px;background:${rc}12;border:1px solid ${isConf?'var(--red)':rc+'33'};cursor:pointer;"
+              onclick="event.stopPropagation();selectQuest('${q.id}');switchView('assign');">
+              <span style="font-size:14px;">${u.avatar}</span>
+              <span style="font-size:11px;font-weight:500;color:${rc};">${u.name}</span>
+              ${isConf?'<span style="font-size:10px;color:var(--red);margin-left:auto;">⚠</span>':''}
+            </div>`;
+          }).join('')
+      }
+      <div style="text-align:center;margin-top:4px;">
+        <button onclick="event.stopPropagation();selectQuest('${q.id}');switchView('assign');"
+          style="font-size:10px;padding:3px 12px;background:var(--accent);border:none;border-radius:4px;
+                 color:#1a0e00;font-weight:700;cursor:pointer;font-family:'Noto Sans JP',sans-serif;">
+          ✎ アサイン編集
+        </button>
       </div>
+    </div>`;
 
-      <!-- メンバー展開エリア（クリックで表示/非表示） -->
-      <div id="qmbar-${q.id}" style="display:none;position:absolute;left:${left}px;top:32px;min-width:${width}px;
-        background:var(--bg2);border:1px solid ${color}55;border-radius:6px;
-        box-shadow:0 4px 16px rgba(0,0,0,0.5);z-index:100;padding:6px;">
-        ${q.assignedIds.length === 0
-          ? `<div style="font-size:11px;color:var(--text3);padding:4px 6px;">未アサイン</div>`
-          : q.assignedIds.map(a => {
-              const u = units.find(x => x.id === a.uid);
-              if (!u) return '';
-              const rc = rarityColor(u.rarity);
-              const usi = Math.max(0, dateToIdx(a.start) < 0 ? 0 : dateToIdx(a.start));
-              const uei = Math.min(totalCells - 1, Math.max(0, dateToIdx(a.end)));
-              const uLeft  = (usi - si) * CELL_W;
-              const uWidth = Math.max(60, (uei - usi + 1) * CELL_W - 2);
-              const isConf = conflicts[a.uid];
-              return `<div style="display:flex;align-items:center;gap:6px;padding:3px 6px;border-radius:4px;
-                margin-bottom:3px;background:${rc}12;border:1px solid ${rc}33;cursor:pointer;
-                ${isConf ? 'border-color:var(--red);' : ''}"
-                onclick="event.stopPropagation();selectQuest('${q.id}');switchView('assign');"
-                title="アサイン画面を開く">
-                <span style="font-size:14px;">${u.avatar}</span>
-                <span style="font-size:11px;font-weight:500;color:${rc};">${u.name}</span>
-                <span style="font-size:9px;color:var(--text3);margin-left:auto;">Lv.${getUnitTotalLevel(u)}</span>
-                ${isConf ? '<span style="font-size:10px;color:var(--red);">⚠</span>' : ''}
-              </div>`;
-            }).join('')
-        }
-        <div style="text-align:center;margin-top:4px;">
-          <button onclick="event.stopPropagation();selectQuest('${q.id}');switchView('assign');"
-            style="font-size:10px;padding:3px 12px;background:var(--accent);border:none;border-radius:4px;
-                   color:#1a0e00;font-weight:700;cursor:pointer;font-family:'Noto Sans JP',sans-serif;">
-            ✎ アサイン編集
-          </button>
-        </div>
-      </div>`;
-    }
-
-    return `<div class="gantt-row${hasConf ? ' conflict-row' : ''}" style="min-height:${ROW_H}px;height:${ROW_H}px;align-items:flex-start;">
-      <div class="gantt-row-name" style="height:${ROW_H}px;align-items:center;">
-        <div style="width:8px;height:8px;border-radius:2px;background:${color};flex-shrink:0;"></div>
+    return `<div class="gantt-row${hasConf?' conflict-row':''}"
+      data-qid="${q.id}" data-qidx="${qIdx}"
+      draggable="true"
+      ondragstart="calQuestDragStart(event,'${q.id}')"
+      ondragover="calQuestDragOver(event)"
+      ondrop="calQuestDrop(event,'${q.id}')"
+      ondragend="calQuestDragEnd(event)"
+      style="min-height:${ROW_H}px;height:${ROW_H}px;align-items:flex-start;cursor:grab;opacity:${rowOpacity};transition:opacity 0.2s;">
+      <div class="gantt-row-name" style="height:${ROW_H}px;align-items:center;gap:6px;">
+        <div style="width:6px;height:6px;border-radius:2px;background:${color};flex-shrink:0;"></div>
         <div class="row-name-text" title="${q.name}">${q.name}</div>
-        ${hasConf ? '<div class="row-conflict-icon">⚠</div>' : ''}
+        ${hasConf?'<div class="row-conflict-icon">⚠</div>':''}
       </div>
       <div class="gantt-timeline" style="width:${totalW}px;position:relative;height:${ROW_H}px;overflow:visible;">
         ${makeCells()}
@@ -4429,14 +4541,16 @@ function renderCalendar() {
   const FISCAL_BASE_YEAR = 2026;
   const FISCAL_BASE_TERM = 46;
   const fiscalLines = [];
-  for (let y = FISCAL_BASE_YEAR - 3; y <= FISCAL_BASE_YEAR + 10; y++) {
+  const seenX = new Set();
+  for (let y = FISCAL_BASE_YEAR - 5; y <= FISCAL_BASE_YEAR + 10; y++) {
     const termNum = FISCAL_BASE_TERM + (y - FISCAL_BASE_YEAR);
-    // 7/31 のセルインデックスを取得
     const idx = dateToIdx(`${y}-07-31`);
     if (idx >= 0 && idx < totalCells) {
-      // セルの右端に縦線を引く（+1セル分）
       const x = NAME_W + (idx + 1) * CELL_W;
-      fiscalLines.push({ termNum, x });
+      if (!seenX.has(x)) {
+        seenX.add(x);
+        fiscalLines.push({ termNum, x });
+      }
     }
   }
   const fiscalOverlayHtml = fiscalLines.map(f =>
@@ -4458,8 +4572,8 @@ function renderCalendar() {
       <!-- Single TODAY line overlay -->
       ${todayIdx >= 0 && todayIdx < totalCells ? `
       <div style="position:absolute;left:${NAME_W + todayIdx * CELL_W + DAY_W/2}px;top:0;bottom:0;width:2px;
-        background:var(--accent);z-index:30;pointer-events:none;box-shadow:0 0 6px rgba(245,166,35,0.5);">
-        <div style="position:sticky;top:0;font-size:9px;font-weight:700;color:var(--accent);
+        background:#3dd68c;z-index:30;pointer-events:none;box-shadow:0 0 6px rgba(61,214,140,0.5);">
+        <div style="position:sticky;top:0;font-size:9px;font-weight:700;color:#3dd68c;
           letter-spacing:0.05em;white-space:nowrap;padding:4px 4px;background:var(--bg);">TODAY</div>
       </div>` : ''}
       <!-- Month header -->
@@ -4487,6 +4601,7 @@ function renderCalendar() {
         <div class="gantt-section-label" style="width:${NAME_W}px">案件ガント</div>
         <div style="flex:1;background:var(--bg3);"></div>
       </div>
+      ${heatmapRow}
       ${questRows}
     </div>
   `;
@@ -4624,12 +4739,12 @@ function closeQuestDetailAndGoAssign() {
 // dragState は上部（3220行）で宣言済み
 
 function startDrag(e, questId, fromUnitId) {
-  // カレンダードラッグ開始時にスロットD&D状態をリセット
   slotDragUid = null; slotDragQid = null; slotDragEl = null;
   const tz = document.getElementById('slot-trash-zone');
   if (tz) tz.style.display = 'none';
 
   e.preventDefault();
+  e.stopPropagation(); // 案件行のdragstartと干渉させない
   hideCalTooltip();
   const q = quests.find(x => x.id === questId);
   if (!q) return;
@@ -4637,6 +4752,7 @@ function startDrag(e, questId, fromUnitId) {
   const color = ['','#8b90a8','#3dd68c','#4a9eff','#c77dff','#f5a623','#ff5555'][diff.level];
 
   const ghost = document.getElementById('drag-ghost');
+  if (!ghost) return; // null guard
   ghost.textContent = q.name;
   ghost.style.background = color + '33';
   ghost.style.border = `1.5px solid ${color}`;
@@ -4730,78 +4846,114 @@ function showAvailableSuggestions(qid) {
   const conflicts = getUnitConflicts();
   const qStart = new Date(q.start);
   const qEnd   = new Date(q.end);
+  const alreadyAssigned = getAssignedUids(q);
 
-  // 案件期間中に空いている人材を探す
+  // 空き人材を取得（外注除く）
   const available = units.filter(u => {
-    // すでにアサイン済みならスキップ
-    if (getAssignedUids(q).includes(u.id)) return false;
-    // 同期間に別の案件がアサインされているか確認
+    if (u.isExternal) return false;
+    if (alreadyAssigned.includes(u.id)) return false;
     const busy = quests.some(oq => {
       if (oq.id === qid) return false;
       if (!getAssignedUids(oq).includes(u.id)) return false;
       const assign = getAssignment(oq, u.id);
       const oStart = new Date(assign?.start || oq.start);
       const oEnd   = new Date(assign?.end   || oq.end);
-      const od=Math.round((Math.min(oEnd,qEnd)-Math.max(oStart,qStart))/86400000); return od>=1;
+      const od = Math.round((Math.min(oEnd,qEnd) - Math.max(oStart,qStart)) / 86400000);
+      return od >= 1;
     });
     return !busy;
   });
 
-  // スキルマッチ度でソート
+  // 詳細スコアリング
+  const diff = getDifficulty(q.amount);
+  const recLv = getRecommendedLevel(diff);
+  const reqSkills = q.skills || [];
+  const cat = CATEGORIES[q.category] || CATEGORIES.other;
+  const assignedUnits = alreadyAssigned.map(uid => units.find(x=>x.id===uid)).filter(Boolean);
+
   const scored = available.map(u => {
-    let score = u.rarity * 10;
-    const reqSkills = q.skills || [];
-    if (reqSkills.length > 0) {
-      const matched = reqSkills.filter(sk =>
-        u.skills.some(s => s.includes(sk.slice(0,4)) || sk.includes(s.slice(0,4)))
-      ).length;
-      score += matched * 20;
-    }
-    // 物件種別のLvも加味
+    let score = 0;
+    const reasons = [];
+
+    // レアリティ（最大20pt）
+    score += u.rarity * 3;
+
+    // Lv充足度（最大25pt）
+    const uLv = getUnitTotalLevel(u);
+    const lvScore = Math.min(25, Math.round(uLv / Math.max(recLv,1) * 25));
+    score += lvScore;
+    if (uLv >= recLv) reasons.push({ label: `Lv${uLv} 推奨到達`, color: '#3dd68c' });
+
+    // 資格マッチ（最大30pt）
+    const matchedSkills = reqSkills.filter(sk =>
+      u.skills.some(s => s.includes(sk.slice(0,4)) || sk.includes(s.slice(0,4)))
+    );
+    const skillScore = reqSkills.length > 0 ? Math.round(matchedSkills.length / reqSkills.length * 30) : 15;
+    score += skillScore;
+    if (matchedSkills.length > 0) reasons.push({ label: `資格${matchedSkills.length}件一致`, color: '#4a9eff' });
+
+    // 物件種別Lv（最大15pt）
     const catLevels = getUnitCatLevels(u);
-    score += (catLevels[q.category] || 0) * 3;
-    return { u, score };
+    const catLv = catLevels[q.category] || 0;
+    score += catLv * 2;
+    if (catLv >= 5) reasons.push({ label: `${cat.icon}Lv${catLv}`, color: '#c77dff' });
+
+    // 相性ボーナス
+    if (assignedUnits.length > 0) {
+      assignedUnits.forEach(au => {
+        const af = (au.affinities||[]).find(a => a.partnerId === u.id);
+        if (af?.type === 'good') { score += 10; reasons.push({ label: `♥ ${au.name}と相性◎`, color: '#f5a623' }); }
+        if (af?.type === 'bad')  { score -= 15; reasons.push({ label: `✕ ${au.name}と相性×`, color: '#ff5555' }); }
+      });
+    }
+
+    // 若手NGペナルティ
+    if (isJuniorNG(u) && assignedUnits.some(au => getUnitTotalLevel(au) <= 5)) {
+      score -= 20; reasons.push({ label: '🚫 若手NG抵触', color: '#ff5555' });
+    }
+
+    // 図面担当可ボーナス（図面スロットが空なら）
+    const hasDrawer = q.assignedIds.some(a => a.role === 'drawer');
+    if (!hasDrawer && isCanDraw(u)) { score += 8; reasons.push({ label: '📐 図面担当可', color: '#3dd68c' }); }
+
+    const matchPct = reqSkills.length > 0
+      ? Math.round(matchedSkills.length / reqSkills.length * 100) : 100;
+
+    return { u, score: Math.max(0, score), matchPct, catLv, uLv, reasons };
   }).sort((a, b) => b.score - a.score);
 
-  const diff = getDifficulty(q.amount);
-  const cat = CATEGORIES[q.category] || CATEGORIES.other;
-
-  // モーダルに表示
   const body = document.getElementById('suggest-modal-body');
   body.innerHTML = `
-    <div style="font-size:12px;color:var(--text2);margin-bottom:12px;">
+    <div style="font-size:12px;color:var(--text2);margin-bottom:12px;padding:8px 10px;background:var(--bg3);border-radius:6px;">
       <strong style="color:var(--text);">${q.name}</strong>
-      （${q.start} 〜 ${q.end} / ${cat.icon}${cat.label} / ${diff.label}）の期間に空いている人材
+      <span style="margin-left:8px;font-size:10px;">${q.start} 〜 ${q.end}</span>
+      <span style="margin-left:8px;">${cat.icon} ${cat.label}</span>
+      <span style="margin-left:8px;color:${diff.color};">${diff.label}</span>
+      <span style="margin-left:8px;color:var(--text3);">空き人材 ${available.length}名</span>
     </div>
     ${scored.length === 0
-      ? '<div style="font-size:12px;color:var(--text3);padding:12px 0;">この期間に空いている人材がいません</div>'
-      : scored.map(({ u, score }) => {
+      ? '<div style="font-size:12px;color:var(--text3);padding:20px 0;text-align:center;">この期間に空いている人材がいません</div>'
+      : scored.map(({ u, score, matchPct, catLv, uLv, reasons }, i) => {
           const rc = rarityColor(u.rarity);
-          const lv = getUnitTotalLevel(u);
-          const catLv = getUnitCatLevels(u)[q.category] || 0;
-          const reqSkills = q.skills || [];
-          const matchedSkills = reqSkills.filter(sk =>
-            u.skills.some(s => s.includes(sk.slice(0,4)) || sk.includes(s.slice(0,4)))
-          );
-          const matchPct = reqSkills.length > 0
-            ? Math.round(matchedSkills.length / reqSkills.length * 100)
-            : 100;
-          const matchColor = matchPct >= 80 ? '#3dd68c' : matchPct >= 40 ? '#f5a623' : '#8b90a8';
-          return `<div style="display:flex;align-items:center;gap:12px;padding:8px 10px;
-              background:var(--bg3);border:1px solid var(--border);border-radius:8px;margin-bottom:6px;">
-            <div style="width:36px;height:36px;border-radius:50%;background:${rc}22;border:2px solid ${rc};
-                 display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0;">${u.avatar}</div>
+          const scoreColor = score >= 60 ? '#3dd68c' : score >= 35 ? '#f5a623' : '#8b90a8';
+          const rank = i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : `${i+1}.`;
+          return `<div style="display:flex;align-items:center;gap:10px;padding:8px 10px;
+              background:var(--bg3);border:1px solid ${i<3?rc+'44':'var(--border)'};border-radius:8px;margin-bottom:6px;">
+            <div style="font-size:16px;flex-shrink:0;width:24px;text-align:center;">${rank}</div>
+            <div style="width:34px;height:34px;border-radius:50%;background:${rc}22;border:2px solid ${rc};
+                 display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0;">${u.avatar}</div>
             <div style="flex:1;min-width:0;">
-              <div style="font-size:12px;font-weight:500;color:var(--text);">${u.name}
-                ${isJuniorNG(u) ? '<span style="font-size:9px;color:var(--red);margin-left:4px;">🚫若手NG</span>' : ''}
+              <div style="font-size:12px;font-weight:600;color:var(--text);">${u.name}
+                <span style="font-size:10px;color:${rc};margin-left:4px;">${RARITY_STARS[u.rarity]} Lv.${uLv}</span>
               </div>
-              <div style="font-size:10px;color:${rc};margin-top:1px;">${isLR(u.rarity)?`<span class="lr-text">${RARITY_STARS[u.rarity]}</span>`:RARITY_STARS[u.rarity]} Lv.${lv}</div>
-              <div style="font-size:10px;color:var(--text3);margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${u.skills.slice(0,3).join('・')}</div>
+              <div style="display:flex;flex-wrap:wrap;gap:3px;margin-top:3px;">
+                ${reasons.map(r=>`<span style="font-size:9px;background:${r.color}18;color:${r.color};border:1px solid ${r.color}44;border-radius:3px;padding:1px 5px;">${r.label}</span>`).join('')}
+              </div>
+              <div style="font-size:10px;color:var(--text3);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${u.skills.slice(0,3).join('・')}</div>
             </div>
-            <div style="text-align:center;flex-shrink:0;">
-              <div style="font-size:11px;font-weight:700;color:${matchColor};">${matchPct}%</div>
-              <div style="font-size:9px;color:var(--text3);">資格一致</div>
-              ${catLv > 0 ? `<div style="font-size:9px;color:var(--purple);margin-top:2px;">${cat.icon}Lv.${catLv}</div>` : ''}
+            <div style="text-align:center;flex-shrink:0;min-width:40px;">
+              <div style="font-size:16px;font-weight:700;color:${scoreColor};">${score}</div>
+              <div style="font-size:9px;color:var(--text3);">スコア</div>
             </div>
             <button onclick="quickAssign('${q.id}','${u.id}')"
               style="padding:6px 12px;background:var(--accent);border:none;border-radius:6px;
@@ -4971,16 +5123,19 @@ function saveStatusEdit(uid) {
   showToast(`${u.name} のプロフィールを更新しました`, 'success');
 }
 
-// 案件メンバーバー開閉
-let _openQuestBar = null;
+// ── 案件期間ハイライト ──
+let _openQuestBar   = null;
+let _highlightedQid = null;
+
 function toggleQuestMemberBar(qid) {
-  // 同じものをクリックしたら閉じる
+  // ハイライトも同時に切り替え
+  toggleQuestPeriodHighlight(qid);
+
   if (_openQuestBar === qid) {
     document.getElementById(`qmbar-${qid}`)?.style.setProperty('display','none');
     _openQuestBar = null;
     return;
   }
-  // 他に開いているものを閉じる
   if (_openQuestBar) {
     document.getElementById(`qmbar-${_openQuestBar}`)?.style.setProperty('display','none');
   }
@@ -4988,11 +5143,50 @@ function toggleQuestMemberBar(qid) {
   if (el) { el.style.display = 'block'; _openQuestBar = qid; }
 }
 
-// カレンダー上のクリック外れで閉じる
+function toggleQuestPeriodHighlight(qid) {
+  // 既存ハイライトを消す
+  document.querySelectorAll('.quest-period-highlight').forEach(el => el.remove());
+
+  if (_highlightedQid === qid) {
+    _highlightedQid = null;
+    return;
+  }
+  _highlightedQid = qid;
+
+  const q = quests.find(x => x.id === qid);
+  if (!q) return;
+
+  // gantt-inner の中の全 gantt-timeline に帯を追加
+  const wrapper = document.getElementById('gantt-inner');
+  if (!wrapper) return;
+
+  // 現在の表示範囲とCELL_Wを取得するためにrenderCalendarの変数を再計算
+  // 簡易版：既存のバーの left/width から期間を割り出す
+  const bar = wrapper.querySelector(`[data-qid="${qid}"]`);
+  if (!bar) return;
+  const barLeft  = parseInt(bar.style.left)  || 0;
+  const barWidth = parseInt(bar.style.width) || 0;
+
+  // 全 gantt-timeline にハイライト帯を追加
+  wrapper.querySelectorAll('.gantt-timeline').forEach(tl => {
+    const hl = document.createElement('div');
+    hl.className = 'quest-period-highlight';
+    hl.style.left  = barLeft + 'px';
+    hl.style.width = barWidth + 'px';
+    tl.appendChild(hl);
+  });
+}
+
+// カレンダー上のクリック外れで閉じる＋ハイライト消す
 document.addEventListener('click', e => {
   if (_openQuestBar && !e.target.closest(`#qmbar-${_openQuestBar}`) && !e.target.dataset?.qid) {
     document.getElementById(`qmbar-${_openQuestBar}`)?.style.setProperty('display','none');
     _openQuestBar = null;
+  }
+  // バー以外クリックでハイライト解除
+  if (_highlightedQid && !e.target.closest('.quest-bar')) {
+    document.querySelectorAll('.quest-period-highlight').forEach(el => el.remove());
+    _highlightedQid = null;
   }
 });
 
@@ -5010,6 +5204,46 @@ function showQuestCalTooltip(e, qid) {
   tt.innerHTML = `<strong>${q.name}</strong><br>${q.start} 〜 ${q.end}<br>${diff.label} / ${q.assignedIds.length}名<br><span style="color:var(--text2);font-size:10px;">${memberList}</span>`;
   tt.style.display = 'block';
   positionTooltip(e, tt);
+}
+
+// ── カレンダー案件行ドラッグ並び替え ──
+let _calDragQid = null;
+
+function calQuestDragStart(e, qid) {
+  // 人材バー上のドラッグは阻止（バーのonmousedownが優先）
+  if (e.target.closest('.quest-bar') || e.target.closest('.gantt-timeline')) {
+    e.preventDefault();
+    return;
+  }
+  _calDragQid = qid;
+  e.dataTransfer.effectAllowed = 'move';
+  e.dataTransfer.setData('text/plain', qid);
+  setTimeout(() => { e.currentTarget.style.opacity = '0.4'; }, 0);
+}
+function calQuestDragOver(e) {
+  e.preventDefault();
+  e.dataTransfer.dropEffect = 'move';
+  // ドロップ先をハイライト
+  e.currentTarget.style.background = 'rgba(245,166,35,0.08)';
+}
+function calQuestDrop(e, targetQid) {
+  e.preventDefault();
+  e.currentTarget.style.background = '';
+  if (!_calDragQid || _calDragQid === targetQid) return;
+  const fromIdx = quests.findIndex(q => q.id === _calDragQid);
+  const toIdx   = quests.findIndex(q => q.id === targetQid);
+  if (fromIdx < 0 || toIdx < 0) return;
+  const [moved] = quests.splice(fromIdx, 1);
+  quests.splice(toIdx, 0, moved);
+  saveData();
+  renderCalendar();
+}
+function calQuestDragEnd(e) {
+  e.currentTarget.style.opacity = '';
+  e.currentTarget.style.background = '';
+  _calDragQid = null;
+  // 全行のハイライトをリセット
+  document.querySelectorAll('.gantt-row').forEach(r => r.style.background = '');
 }
 
 function getRowUnderCursor(e) {
@@ -6494,6 +6728,158 @@ function openPrintView() {
 }
 function closePrintView() {
   document.getElementById('print-overlay').style.display = 'none';
+}
+
+// ── 共有用ガントビュー ──
+function openShareView() {
+  const { start: vs, end: ve } = getCalViewRange();
+  const viewStart = new Date(vs); viewStart.setHours(0,0,0,0);
+  const viewEnd   = new Date(ve); viewEnd.setHours(0,0,0,0);
+
+  const mn = ['1月','2月','3月','4月','5月','6月','7月','8月','9月','10月','11月','12月'];
+  const fmt = d => `${d.getFullYear()}年${mn[d.getMonth()]}`;
+  document.getElementById('share-period-label').textContent = `${fmt(viewStart)} 〜 ${fmt(viewEnd)}`;
+
+  // セル定義（月単位）
+  const cells = [];
+  let d = new Date(viewStart.getFullYear(), viewStart.getMonth(), 1);
+  while (d <= viewEnd) {
+    const y = d.getFullYear(), mo = d.getMonth();
+    const cs = new Date(y, mo, 1), ce = new Date(y, mo+1, 1);
+    if (cs <= viewEnd)
+      cells.push({ start:cs, end:ce, label:mn[mo], isMonthStart: true, year: y });
+    d = new Date(y, mo+1, 1);
+  }
+
+  const CW = 72; // セル幅px（月単位なので広め）
+  const NW = 200; // 名前列幅px
+  const totalW = cells.length * CW;
+
+  function cellIdx(dateStr) {
+    const dd = new Date(dateStr); dd.setHours(0,0,0,0);
+    for (let i = cells.length-1; i >= 0; i--) { if (cells[i].start <= dd) return i; }
+    return -1;
+  }
+
+  const today = new Date(); today.setHours(0,0,0,0);
+  const todayI = cellIdx(today.toISOString().slice(0,10));
+
+  // 年ヘッダー
+  const yearSpans = [];
+  let yc = null;
+  cells.forEach(c => {
+    if (!yc || yc.label !== String(c.year)) { yc={label:String(c.year),count:0}; yearSpans.push(yc); }
+    yc.count++;
+  });
+
+  const diffColors = {1:'#888',2:'#2a9',3:'#29f',4:'#93f',5:'#f93',6:'#f33'};
+
+  // 案件行
+  const rows = quests.filter(q => getQuestStatus(q) !== 'completed').map(q => {
+    const diff = getDifficulty(q.amount);
+    const color = q.color || diffColors[diff.level] || '#888';
+    const cat = CATEGORIES[q.category] || CATEGORIES.other;
+    const si = Math.max(0, cellIdx(q.start));
+    const ei = Math.min(cells.length-1, cellIdx(q.end));
+    if (ei < 0 || si >= cells.length) return '';
+    const left = si * CW, width = Math.max(CW, (ei-si+1)*CW-2);
+    const clippedL = cellIdx(q.start) < 0;
+    const clippedR = cellIdx(q.end) >= cells.length;
+
+    const cells_bg = cells.map((c,i) => {
+      const isToday = i === todayI;
+      return `<div style="width:${CW}px;height:100%;border-left:1.5px solid #e8e8e8;${isToday?'background:rgba(61,214,140,0.06)':''}"></div>`;
+    }).join('');
+
+    return `<div style="display:flex;border-bottom:1px solid #e0e0e0;min-height:40px;position:relative;">
+      <div style="width:${NW}px;flex-shrink:0;padding:0 10px;display:flex;align-items:center;gap:6px;
+        border-right:2px solid #ddd;background:white;position:sticky;left:0;z-index:5;box-shadow:2px 0 4px rgba(0,0,0,0.05);">
+        <div style="width:6px;height:6px;border-radius:2px;background:${color};flex-shrink:0;"></div>
+        <div style="font-size:11px;font-weight:500;color:#222;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${q.name}</div>
+      </div>
+      <div style="display:flex;position:relative;width:${totalW}px;flex-shrink:0;">
+        ${cells_bg}
+        <div style="position:absolute;left:${left}px;width:${width}px;top:6px;height:28px;
+          background:${color}22;border-top:2px solid ${color};border-bottom:2px solid ${color};
+          ${!clippedL?`border-left:2px solid ${color};`:''}${!clippedR?`border-right:2px solid ${color};`:''}
+          border-radius:${clippedL?'0':'4px'} ${clippedR?'0':'4px'} ${clippedR?'0':'4px'} ${clippedL?'0':'4px'};
+          display:flex;align-items:center;padding:0 8px;overflow:hidden;white-space:nowrap;">
+          ${clippedL?'<span style="margin-right:4px;color:'+color+'">◀</span>':''}
+          <span style="font-size:10px;font-weight:600;color:${color};">${q.name}</span>
+          <span style="margin-left:auto;font-size:9px;color:${color};opacity:0.8;padding-left:6px;">${cat.icon} ${q.assignedIds.length}名</span>
+          ${clippedR?'<span style="margin-left:4px;color:'+color+'">▶</span>':''}
+        </div>
+        ${todayI>=0?`<div style="position:absolute;left:${todayI*CW+CW/2}px;top:0;bottom:0;width:2px;background:#3dd68c;opacity:0.7;pointer-events:none;"></div>`:''}
+      </div>
+    </div>`;
+  }).join('');
+
+  const html = `<div style="display:inline-block;min-width:${NW+totalW}px;">
+    <!-- ヘッダー -->
+    <div style="display:flex;position:sticky;top:0;background:white;z-index:10;border-bottom:2px solid #ccc;">
+      <div style="width:${NW}px;flex-shrink:0;padding:6px 10px;font-size:11px;font-weight:600;color:#555;
+        border-right:2px solid #ddd;background:white;position:sticky;left:0;z-index:15;box-shadow:2px 0 4px rgba(0,0,0,0.05);">案件名</div>
+      <div style="flex-shrink:0;">
+        <div style="display:flex;border-bottom:1px solid #ddd;">
+          ${yearSpans.map(y=>`<div style="width:${y.count*CW}px;padding:4px 6px;font-size:12px;font-weight:700;color:#111;border-left:2px solid #bbb;text-align:center;">${y.label}年</div>`).join('')}
+        </div>
+        <div style="display:flex;">
+          ${cells.map(c=>`<div style="width:${CW}px;padding:3px 0;font-size:11px;font-weight:500;color:#444;text-align:center;border-left:1.5px solid #ddd;">${c.label}</div>`).join('')}
+        </div>
+      </div>
+    </div>
+    <!-- 案件行 -->
+    ${rows || '<div style="padding:20px;color:#999;text-align:center;">進行中の案件がありません</div>'}
+  </div>`;
+
+  document.getElementById('share-content').innerHTML = html;
+  document.getElementById('share-overlay').style.display = 'block';
+}
+
+function closeShareView() {
+  document.getElementById('share-overlay').style.display = 'none';
+}
+
+function removeTempUnit(qid, uid) {
+  const q = quests.find(x => x.id === qid);
+  if (!q) return;
+  const u = units.find(x => x.id === uid);
+  // 案件からアサインを外す
+  q.assignedIds = q.assignedIds.filter(a => a.uid !== uid);
+  // 仮枠ユニット本体も削除
+  const idx = units.findIndex(x => x.id === uid);
+  if (idx >= 0) units.splice(idx, 1);
+  saveData(); render();
+  showToast(`${u?.name || '仮枠'} を削除しました`, 'info');
+}
+
+// ── 仮枠（派遣）ユニット ──
+function addTempUnit(qid, role) {
+  const q = quests.find(x => x.id === qid);
+  if (!q) return;
+  if (q.assignedIds.length >= MAX_SLOTS) { showToast(`最大${MAX_SLOTS}名です`, 'error'); return; }
+
+  // 全仮枠ユニットを数えて次のアルファベットを決定
+  const tempCount = units.filter(u => u.isTemp).length;
+  const letter = String.fromCharCode(65 + (tempCount % 26)); // A-Z
+  const name = `派遣${letter}`;
+
+  // 仮枠ユニットを作成（isTemp フラグ付き）
+  const uid = 'temp_' + Date.now();
+  const tempUnit = {
+    id: uid, name, avatar: '👤', rarity: 1, affinity: 'earth',
+    skills: [], passives: [], xp: {}, totalXp: 0,
+    isExternal: true, isTemp: true, company: '派遣・外注（仮）',
+    birthdate: null, joindate: null, address: null,
+  };
+  units.push(tempUnit);
+
+  // 案件にアサイン
+  normalizeAssigned(q);
+  q.assignedIds.push({ uid, start: q.start, end: q.end, role: role || 'runner' });
+
+  saveData(); render();
+  showToast(`${name} を仮置きしました（後で差し替え可）`, 'info');
 }
 
 function openDataManager() {
