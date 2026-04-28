@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🏗️</text></svg>">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>現場クエスト — 工事アサインシステム</title>
+<title>Gクエスト — 工事アサインシステム</title>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&family=Oswald:wght@400;600&display=swap" rel="stylesheet">
 <style>
 :root {
@@ -851,7 +851,7 @@ header {
 <div id="print-overlay" style="display:none;position:fixed;inset:0;background:white;z-index:500;overflow-y:auto;padding:24px;font-family:'Noto Sans JP',sans-serif;color:#111;">
   <div style="max-width:860px;margin:0 auto;">
     <div style="display:flex;align-items:center;gap:12px;margin-bottom:20px;">
-      <div style="font-size:18px;font-weight:700;color:#111;">現場クエスト — 案件配置表</div>
+      <div style="font-size:18px;font-weight:700;color:#111;">Gクエスト — 案件配置表</div>
       <div style="margin-left:auto;display:flex;gap:8px;">
         <button onclick="window.print()" style="padding:8px 20px;background:#f5a623;border:none;border-radius:6px;color:#1a0e00;font-weight:700;cursor:pointer;font-family:'Noto Sans JP',sans-serif;font-size:13px;">🖨 印刷</button>
         <button onclick="closePrintView()" style="padding:8px 16px;background:#eee;border:none;border-radius:6px;color:#333;cursor:pointer;font-family:'Noto Sans JP',sans-serif;font-size:13px;">✕ 閉じる</button>
@@ -1040,7 +1040,7 @@ header {
 
 <div id="pw-screen" style="position:fixed;inset:0;background:var(--bg);z-index:999;display:flex;align-items:center;justify-content:center;">
   <div style="width:340px;text-align:center;">
-    <div style="font-family:'Oswald',sans-serif;font-size:28px;font-weight:600;color:var(--accent);letter-spacing:0.06em;margin-bottom:6px;">現場クエスト</div>
+    <div style="font-family:'Oswald',sans-serif;font-size:28px;font-weight:600;color:var(--accent);letter-spacing:0.06em;margin-bottom:6px;">Gクエスト</div>
     <div style="font-size:12px;color:var(--text2);margin-bottom:32px;">Construction Assign System</div>
     <div style="background:var(--bg2);border:1px solid var(--border2);border-radius:12px;padding:28px 24px;">
       <div style="font-size:13px;color:var(--text2);margin-bottom:16px;text-align:left;">パスワードを入力してください</div>
@@ -1060,7 +1060,7 @@ header {
 
 <div id="main-app" style="display:none;">
 <header>
-  <div class="logo">現場クエスト <span>Construction Assign System</span></div>
+  <div class="logo">Gクエスト <span>Construction Assign System</span></div>
   <div class="nav-tabs">
     <button class="nav-tab active" id="nav-assign" onclick="switchView('assign')">アサイン</button>
     <button class="nav-tab" id="nav-cal-quest" onclick="switchView('cal-quest')">📋 案件ガント</button>
@@ -5522,23 +5522,23 @@ let _openQuestBar   = null;
 let _highlightedQid = null;
 
 function toggleQuestMemberBar(qid) {
-  // ハイライトも同時に切り替え
   toggleQuestPeriodHighlight(qid);
-
+  // qmbarが存在する場合（旧カレンダービュー）のみポップアップも制御
+  const el = document.getElementById(`qmbar-${qid}`);
+  if (!el) return;
   if (_openQuestBar === qid) {
-    document.getElementById(`qmbar-${qid}`)?.style.setProperty('display','none');
+    el.style.display = 'none';
     _openQuestBar = null;
     return;
   }
   if (_openQuestBar) {
     document.getElementById(`qmbar-${_openQuestBar}`)?.style.setProperty('display','none');
   }
-  const el = document.getElementById(`qmbar-${qid}`);
-  if (el) { el.style.display = 'block'; _openQuestBar = qid; }
+  el.style.display = 'block';
+  _openQuestBar = qid;
 }
 
 function toggleQuestPeriodHighlight(qid) {
-  // 既存ハイライトを消す
   document.querySelectorAll('.quest-period-highlight').forEach(el => el.remove());
 
   if (_highlightedQid === qid) {
@@ -5550,22 +5550,27 @@ function toggleQuestPeriodHighlight(qid) {
   const q = quests.find(x => x.id === qid);
   if (!q) return;
 
-  // gantt-inner の中の全 gantt-timeline に帯を追加
   const wrapper = document.getElementById('gantt-inner');
   if (!wrapper) return;
 
-  // 現在の表示範囲とCELL_Wを取得するためにrenderCalendarの変数を再計算
-  // 簡易版：既存のバーの left/width から期間を割り出す
-  const bar = wrapper.querySelector(`[data-qid="${qid}"]`);
-  if (!bar) return;
-  const barLeft  = parseInt(bar.style.left)  || 0;
-  const barWidth = parseInt(bar.style.width) || 0;
+  // バーのposition:absoluteなleft/widthを取得
+  // data-qidはgantt-timeline内のquest-barに付いている
+  const bar = wrapper.querySelector(`.quest-bar[data-qid="${qid}"]`);
+  let barLeft = 0, barWidth = 0;
+  if (bar) {
+    barLeft  = parseInt(bar.style.left)  || 0;
+    barWidth = parseInt(bar.style.width) || 0;
+  } else {
+    // バーが見つからない場合（ビュー外）は終了
+    _highlightedQid = null;
+    return;
+  }
 
-  // 全 gantt-timeline にハイライト帯を追加
+  // gantt-inner内の全 gantt-timeline に青帯を追加
   wrapper.querySelectorAll('.gantt-timeline').forEach(tl => {
     const hl = document.createElement('div');
     hl.className = 'quest-period-highlight';
-    hl.style.left  = barLeft + 'px';
+    hl.style.left  = barLeft  + 'px';
     hl.style.width = barWidth + 'px';
     tl.appendChild(hl);
   });
@@ -7148,7 +7153,7 @@ function exportJsonBackup() {
   const blob = new Blob([json], { type: 'application/json' });
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a'); a.href = url;
-  a.download = `現場クエスト_バックアップ_${new Date().toISOString().slice(0,10)}.json`;
+  a.download = `Gクエスト_バックアップ_${new Date().toISOString().slice(0,10)}.json`;
   a.click(); URL.revokeObjectURL(url);
   showToast('JSONバックアップをダウンロードしました', 'success');
 }
